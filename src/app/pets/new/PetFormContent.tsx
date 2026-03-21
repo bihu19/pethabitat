@@ -28,7 +28,7 @@ export default function PetFormContent() {
           .select("*", { count: "exact", head: true })
           .eq("user_id", user.id);
 
-        if (count && count >= 1) {
+        if (count && count >= 5) {
           router.push("/dashboard");
           return;
         }
