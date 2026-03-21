@@ -5,6 +5,8 @@ import BottomNav from "@/components/BottomNav";
 import ExploreContent from "./ExploreContent";
 import { createClient } from "@/lib/supabase/server";
 
+export const dynamic = "force-dynamic";
+
 export default async function ExplorePage() {
   let places = [];
   try {

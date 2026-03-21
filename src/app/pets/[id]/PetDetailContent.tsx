@@ -12,10 +12,9 @@ export default function PetDetailContent({ petId }: { petId: string }) {
   const router = useRouter();
   const [pet, setPet] = useState<Pet | null>(null);
   const [loading, setLoading] = useState(true);
-  const supabase = createClient();
-
   useEffect(() => {
     async function load() {
+      const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { router.push("/login"); return; }
 
@@ -28,6 +27,7 @@ export default function PetDetailContent({ petId }: { petId: string }) {
 
   const handleDelete = async () => {
     if (!confirm("Are you sure you want to delete this pet profile?")) return;
+    const supabase = createClient();
     await supabase.from("pets").delete().eq("id", petId);
     router.push("/dashboard");
   };

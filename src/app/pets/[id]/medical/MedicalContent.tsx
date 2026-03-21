@@ -25,10 +25,9 @@ export default function MedicalContent({ petId }: { petId: string }) {
     status: "completed" as MedicalRecord["status"],
   });
 
-  const supabase = createClient();
-
   useEffect(() => {
     async function load() {
+      const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { router.push("/login"); return; }
 
@@ -50,6 +49,7 @@ export default function MedicalContent({ petId }: { petId: string }) {
     e.preventDefault();
     setSubmitting(true);
     try {
+      const supabase = createClient();
       const { data, error } = await supabase
         .from("medical_records")
         .insert({
@@ -80,6 +80,7 @@ export default function MedicalContent({ petId }: { petId: string }) {
 
   const handleDelete = async (id: string) => {
     if (!confirm("Delete this record?")) return;
+    const supabase = createClient();
     await supabase.from("medical_records").delete().eq("id", id);
     setRecords(records.filter((r) => r.id !== id));
   };

@@ -10,14 +10,23 @@ export default function Navbar() {
   const { t, locale, setLocale } = useI18n();
   const [user, setUser] = useState<User | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
-  const supabase = createClient();
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => setUser(user));
+    try {
+      const supabase = createClient();
+      supabase.auth.getUser().then(({ data: { user } }) => setUser(user));
+    } catch {
+      // Supabase not configured
+    }
   }, []);
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    try {
+      const supabase = createClient();
+      await supabase.auth.signOut();
+    } catch {
+      // Supabase not configured
+    }
     setUser(null);
     window.location.href = "/";
   };
