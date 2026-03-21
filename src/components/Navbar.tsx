@@ -6,10 +6,26 @@ import { useI18n } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
 
+function useIsAdmin(user: User | null) {
+  const [isAdmin, setIsAdmin] = useState(false);
+  useEffect(() => {
+    if (!user) { setIsAdmin(false); return; }
+    (async () => {
+      try {
+        const supabase = createClient();
+        const { data } = await supabase.from("user_roles").select("role").eq("user_id", user.id).single();
+        setIsAdmin(data?.role === "admin");
+      } catch { /* table may not exist */ }
+    })();
+  }, [user]);
+  return isAdmin;
+}
+
 export default function Navbar() {
   const { t, locale, setLocale } = useI18n();
   const [user, setUser] = useState<User | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const isAdmin = useIsAdmin(user);
 
   useEffect(() => {
     try {
@@ -50,6 +66,12 @@ export default function Navbar() {
                 {t("nav.dashboard")}
               </Link>
             )}
+            {isAdmin && (
+              <Link href="/admin" className="text-on-surface-variant hover:text-primary transition-colors flex items-center gap-1">
+                <span className="material-symbols-outlined text-sm">admin_panel_settings</span>
+                {t("nav.admin")}
+              </Link>
+            )}
           </div>
         </div>
         <div className="flex items-center gap-2 md:gap-4">
@@ -70,7 +92,11 @@ export default function Navbar() {
           {user ? (
             <div className="flex items-center gap-2">
               <Link href="/dashboard" className="w-10 h-10 rounded-full overflow-hidden bg-surface-container border-2 border-primary-container flex items-center justify-center">
-                <span className="material-symbols-outlined text-primary">person</span>
+                {user.user_metadata?.avatar_url ? (
+                  <img src={user.user_metadata.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+                ) : (
+                  <span className="material-symbols-outlined text-primary">person</span>
+                )}
               </Link>
               <button onClick={handleLogout} className="hidden md:block text-sm text-on-surface-variant hover:text-primary">
                 {t("nav.logout")}
@@ -98,6 +124,12 @@ export default function Navbar() {
           {user && (
             <Link href="/dashboard" className="block text-on-surface-variant hover:text-primary font-medium" onClick={() => setMenuOpen(false)}>
               {t("nav.dashboard")}
+            </Link>
+          )}
+          {isAdmin && (
+            <Link href="/admin" className="block text-on-surface-variant hover:text-primary font-medium flex items-center gap-1" onClick={() => setMenuOpen(false)}>
+              <span className="material-symbols-outlined text-sm">admin_panel_settings</span>
+              {t("nav.admin")}
             </Link>
           )}
         </div>

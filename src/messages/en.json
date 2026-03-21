@@ -7,7 +7,8 @@
     "register": "Register",
     "addSpot": "Add Spot",
     "search": "Find a spot...",
-    "logout": "Logout"
+    "logout": "Logout",
+    "admin": "Admin"
   },
   "home": {
     "title": "Discover the Wilder Side.",
@@ -33,7 +34,14 @@
     "petHotels": "Pet Hotels",
     "reviews": "reviews",
     "openGoogleMaps": "Open in Google Maps",
-    "found": "Found"
+    "found": "Found",
+    "searchPlaceholder": "Search by name, province...",
+    "advancedFilters": "Advanced Filters",
+    "clearFilters": "Clear filters",
+    "province": "Province",
+    "allProvinces": "All Provinces",
+    "petFriendlyOnly": "Pet-friendly only",
+    "noResults": "No places found"
   },
   "place": {
     "about": "About this place",
@@ -54,7 +62,8 @@
     "healthPassportDesc": "View digital records and vaccination schedules for all your pets.",
     "accessRecords": "Access Records",
     "savedSpots": "My Saved Spots",
-    "upcomingActivities": "Upcoming Activities"
+    "upcomingActivities": "Upcoming Activities",
+    "subtitle": "Your pet companion dashboard."
   },
   "pet": {
     "createProfile": "Create Pet Profile",
@@ -72,6 +81,11 @@
     "healthCare": "Health & Care",
     "vaccination": "Vaccination Status",
     "specialNeeds": "Special Needs or Allergies",
+    "photo": "Pet Photo",
+    "addPhoto": "Add Photo",
+    "removePhoto": "Remove photo",
+    "photoHint": "JPG, PNG up to 5MB",
+    "photoTooLarge": "Photo must be under 5MB",
     "saveProfile": "Save Profile",
     "cancel": "Cancel",
     "dog": "Dog",
@@ -121,6 +135,30 @@
     "terms": "Terms of Service",
     "partner": "Partner with Us",
     "help": "Help Center"
+  },
+  "admin": {
+    "managePlaces": "Manage Places",
+    "addPlace": "Add New Place",
+    "editPlace": "Edit Place",
+    "deletePlaceConfirm": "Are you sure you want to delete this place?",
+    "placeName": "Place Name",
+    "placeType": "Place Type",
+    "province": "Province",
+    "description": "Description",
+    "googleMapsUrl": "Google Maps URL",
+    "websiteUrl": "Website URL",
+    "petFee": "Pet Fee",
+    "petCondition": "Pet Conditions",
+    "petFriendly": "Pet Friendly",
+    "latitude": "Latitude",
+    "longitude": "Longitude",
+    "coverImage": "Cover Image",
+    "uploadImage": "Upload Image",
+    "saving": "Saving...",
+    "saved": "Saved!",
+    "deleted": "Deleted!",
+    "searchPlaces": "Search places...",
+    "noPlaces": "No places yet. Add your first place!"
   },
   "categories": {
     "Hotel": "Pet-Friendly Hotels",

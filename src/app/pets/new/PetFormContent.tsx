@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/client";
+import { uploadImage } from "@/lib/uploadImage";
 
 const temperamentOptions = ["Playful", "Shy", "Energetic", "Cuddly", "Vocal", "Calm", "Protective"];
 
@@ -12,6 +13,9 @@ export default function PetFormContent() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState({
     name: "",
     species: "dog" as "dog" | "cat" | "other",
@@ -23,6 +27,17 @@ export default function PetFormContent() {
     social_cats: "",
     special_needs: "",
   });
+
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      setError(t("pet.photoTooLarge"));
+      return;
+    }
+    setPhotoFile(file);
+    setPhotoPreview(URL.createObjectURL(file));
+  };
 
   const toggleTemperament = (tag: string) => {
     setForm((f) => ({
@@ -44,6 +59,11 @@ export default function PetFormContent() {
         router.push("/login");
         return;
       }
+      let photo_url: string | null = null;
+      if (photoFile) {
+        photo_url = await uploadImage("pet-photos", user.id, photoFile);
+      }
+
       const { error } = await supabase.from("pets").insert({
         user_id: user.id,
         name: form.name,
@@ -55,6 +75,7 @@ export default function PetFormContent() {
         social_dogs: form.social_dogs || null,
         social_cats: form.social_cats || null,
         special_needs: form.special_needs || null,
+        photo_url,
       });
       if (error) throw error;
       router.push("/dashboard");
@@ -81,6 +102,48 @@ export default function PetFormContent() {
         {error && (
           <div className="bg-error-container text-on-error-container p-3 rounded-lg text-sm">{error}</div>
         )}
+
+        {/* Photo Upload */}
+        <section className="bg-surface-container-low p-6 md:p-8 rounded-xl border border-outline-variant/15">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 rounded-full bg-primary-fixed flex items-center justify-center">
+              <span className="material-symbols-outlined text-on-primary-fixed-variant">photo_camera</span>
+            </div>
+            <h2 className="font-headline font-bold text-xl md:text-2xl tracking-tight">{t("pet.photo")}</h2>
+          </div>
+          <div className="flex flex-col items-center gap-4">
+            <div
+              onClick={() => fileInputRef.current?.click()}
+              className="w-32 h-32 rounded-full border-4 border-dashed border-outline-variant/30 hover:border-primary/50 flex items-center justify-center cursor-pointer overflow-hidden bg-surface-container transition-colors"
+            >
+              {photoPreview ? (
+                <img src={photoPreview} alt="Pet preview" className="w-full h-full object-cover" />
+              ) : (
+                <div className="flex flex-col items-center gap-1 text-on-surface-variant/40">
+                  <span className="material-symbols-outlined text-3xl">add_a_photo</span>
+                  <span className="text-xs font-medium">{t("pet.addPhoto")}</span>
+                </div>
+              )}
+            </div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handlePhotoChange}
+            />
+            {photoPreview && (
+              <button
+                type="button"
+                onClick={() => { setPhotoFile(null); setPhotoPreview(null); }}
+                className="text-xs text-error hover:underline"
+              >
+                {t("pet.removePhoto")}
+              </button>
+            )}
+            <p className="text-xs text-on-surface-variant">{t("pet.photoHint")}</p>
+          </div>
+        </section>
 
         {/* Basic Info */}
         <section className="bg-surface-container-low p-6 md:p-8 rounded-xl border border-outline-variant/15 space-y-6">

@@ -55,8 +55,12 @@ export default function PetDetailContent({ petId }: { petId: string }) {
           <span className="material-symbols-outlined">arrow_back</span> {t("common.back")}
         </button>
         <div className="flex items-center gap-6">
-          <div className="w-24 h-24 rounded-full bg-surface-container border-4 border-primary flex items-center justify-center">
-            <span className="material-symbols-outlined text-5xl text-on-surface-variant/30" style={{ fontVariationSettings: "'FILL' 1" }}>pets</span>
+          <div className="w-24 h-24 rounded-full bg-surface-container border-4 border-primary flex items-center justify-center overflow-hidden">
+            {pet.photo_url ? (
+              <img src={pet.photo_url} alt={pet.name} className="w-full h-full object-cover" />
+            ) : (
+              <span className="material-symbols-outlined text-5xl text-on-surface-variant/30" style={{ fontVariationSettings: "'FILL' 1" }}>pets</span>
+            )}
           </div>
           <div>
             <h1 className="font-headline text-4xl font-extrabold tracking-tight">{pet.name}</h1>
