@@ -29,8 +29,8 @@ export default function PrivacyPage() {
           <section className="bg-surface-container-low p-6 md:p-8 rounded-xl mb-8 space-y-4">
             <h2 className="font-headline text-xl md:text-2xl font-bold text-on-surface">12. ผู้ควบคุมข้อมูลส่วนบุคคล (Data Controller)</h2>
             <div className="text-on-surface-variant text-sm leading-relaxed space-y-1">
-              <p><strong>PetHabitat</strong></p>
-              <p>อีเมล / Email: contact@pethabitat.com</p>
+              <p><strong>Sanhanat</strong></p>
+              <p>อีเมล / Email: bizbigpuay@gmail.com</p>
             </div>
           </section>
 
@@ -149,8 +149,8 @@ export default function PrivacyPage() {
               <li><strong>สิทธิในการร้องเรียน (Right to Lodge a Complaint):</strong> ยื่นเรื่องร้องเรียนต่อคณะกรรมการคุ้มครองข้อมูลส่วนบุคคล</li>
             </ol>
             <div className="bg-primary-container/20 p-4 rounded-lg">
-              <p className="text-on-surface-variant text-sm">หากท่านต้องการใช้สิทธิใด ๆ กรุณาติดต่อเราที่ contact@pethabitat.com เราจะดำเนินการตามคำขอของท่านภายใน 30 วัน</p>
-              <p className="text-on-surface-variant text-sm italic">To exercise any of these rights, please contact us at contact@pethabitat.com. We will process your request within 30 days.</p>
+              <p className="text-on-surface-variant text-sm">หากท่านต้องการใช้สิทธิใด ๆ กรุณาติดต่อเราที่ bizbigpuay@gmail.com เราจะดำเนินการตามคำขอของท่านภายใน 30 วัน</p>
+              <p className="text-on-surface-variant text-sm italic">To exercise any of these rights, please contact us at bizbigpuay@gmail.com. We will process your request within 30 days.</p>
             </div>
           </section>
 
@@ -222,8 +222,8 @@ export default function PrivacyPage() {
               If you have any questions or concerns regarding these Terms and Conditions or Privacy Policy, please contact us at:
             </p>
             <div className="bg-surface-container-lowest p-4 rounded-lg">
-              <p className="font-bold text-on-surface">PetHabitat</p>
-              <p className="text-on-surface-variant text-sm">Email: contact@pethabitat.com</p>
+              <p className="font-bold text-on-surface">Sanhanat</p>
+              <p className="text-on-surface-variant text-sm">Email: bizbigpuay@gmail.com</p>
             </div>
           </section>
         </article>
