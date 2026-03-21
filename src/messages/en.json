@@ -88,6 +88,8 @@
     "photoTooLarge": "Photo must be under 5MB",
     "saveProfile": "Save Profile",
     "cancel": "Cancel",
+    "viewProfile": "View Pet Profile",
+    "viewProfileDesc": "Check on your pet's info and health records",
     "dog": "Dog",
     "cat": "Cat",
     "other": "Other"

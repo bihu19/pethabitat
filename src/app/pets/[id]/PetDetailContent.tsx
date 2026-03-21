@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/client";
+import { uploadImage } from "@/lib/uploadImage";
 import type { Pet } from "@/lib/types";
 
 export default function PetDetailContent({ petId }: { petId: string }) {
@@ -12,6 +13,9 @@ export default function PetDetailContent({ petId }: { petId: string }) {
   const router = useRouter();
   const [pet, setPet] = useState<Pet | null>(null);
   const [loading, setLoading] = useState(true);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const photoInputRef = useRef<HTMLInputElement>(null);
+
   useEffect(() => {
     async function load() {
       const supabase = createClient();
@@ -24,6 +28,23 @@ export default function PetDetailContent({ petId }: { petId: string }) {
     }
     load();
   }, [petId]);
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !pet) return;
+    if (file.size > 5 * 1024 * 1024) return;
+    setUploadingPhoto(true);
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const url = await uploadImage("pet-photos", user.id, file);
+    if (url) {
+      await supabase.from("pets").update({ photo_url: url }).eq("id", petId);
+      setPet({ ...pet, photo_url: url });
+    }
+    setUploadingPhoto(false);
+  };
 
   const handleDelete = async () => {
     if (!confirm("Are you sure you want to delete this pet profile?")) return;
@@ -55,12 +76,26 @@ export default function PetDetailContent({ petId }: { petId: string }) {
           <span className="material-symbols-outlined">arrow_back</span> {t("common.back")}
         </button>
         <div className="flex items-center gap-6">
-          <div className="w-24 h-24 rounded-full bg-surface-container border-4 border-primary flex items-center justify-center overflow-hidden">
-            {pet.photo_url ? (
-              <img src={pet.photo_url} alt={pet.name} className="w-full h-full object-cover" />
-            ) : (
-              <span className="material-symbols-outlined text-5xl text-on-surface-variant/30" style={{ fontVariationSettings: "'FILL' 1" }}>pets</span>
-            )}
+          <div className="relative">
+            <div
+              onClick={() => photoInputRef.current?.click()}
+              className="w-24 h-24 rounded-full bg-surface-container border-4 border-primary flex items-center justify-center overflow-hidden cursor-pointer"
+            >
+              {uploadingPhoto ? (
+                <span className="material-symbols-outlined text-3xl text-primary animate-spin">progress_activity</span>
+              ) : pet.photo_url ? (
+                <img src={pet.photo_url} alt={pet.name} className="w-full h-full object-cover" />
+              ) : (
+                <span className="material-symbols-outlined text-5xl text-on-surface-variant/30" style={{ fontVariationSettings: "'FILL' 1" }}>pets</span>
+              )}
+            </div>
+            <div
+              className="absolute bottom-0 right-0 w-7 h-7 rounded-full bg-primary flex items-center justify-center shadow-md cursor-pointer"
+              onClick={() => photoInputRef.current?.click()}
+            >
+              <span className="material-symbols-outlined text-on-primary text-sm">photo_camera</span>
+            </div>
+            <input ref={photoInputRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} />
           </div>
           <div>
             <h1 className="font-headline text-4xl font-extrabold tracking-tight">{pet.name}</h1>
