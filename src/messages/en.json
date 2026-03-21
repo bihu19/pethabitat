@@ -33,7 +33,14 @@
     "petHotels": "Pet Hotels",
     "reviews": "reviews",
     "openGoogleMaps": "Open in Google Maps",
-    "found": "Found"
+    "found": "Found",
+    "searchPlaceholder": "Search by name, province...",
+    "advancedFilters": "Advanced Filters",
+    "clearFilters": "Clear filters",
+    "province": "Province",
+    "allProvinces": "All Provinces",
+    "petFriendlyOnly": "Pet-friendly only",
+    "noResults": "No places found"
   },
   "place": {
     "about": "About this place",
@@ -54,7 +61,8 @@
     "healthPassportDesc": "View digital records and vaccination schedules for all your pets.",
     "accessRecords": "Access Records",
     "savedSpots": "My Saved Spots",
-    "upcomingActivities": "Upcoming Activities"
+    "upcomingActivities": "Upcoming Activities",
+    "subtitle": "Your pet companion dashboard."
   },
   "pet": {
     "createProfile": "Create Pet Profile",
@@ -72,6 +80,11 @@
     "healthCare": "Health & Care",
     "vaccination": "Vaccination Status",
     "specialNeeds": "Special Needs or Allergies",
+    "photo": "Pet Photo",
+    "addPhoto": "Add Photo",
+    "removePhoto": "Remove photo",
+    "photoHint": "JPG, PNG up to 5MB",
+    "photoTooLarge": "Photo must be under 5MB",
     "saveProfile": "Save Profile",
     "cancel": "Cancel",
     "dog": "Dog",

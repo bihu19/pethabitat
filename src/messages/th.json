@@ -33,7 +33,14 @@
     "petHotels": "โรงแรมสัตว์เลี้ยง",
     "reviews": "รีวิว",
     "openGoogleMaps": "เปิดใน Google Maps",
-    "found": "พบ"
+    "found": "พบ",
+    "searchPlaceholder": "ค้นหาชื่อ จังหวัด...",
+    "advancedFilters": "ตัวกรองขั้นสูง",
+    "clearFilters": "ล้างตัวกรอง",
+    "province": "จังหวัด",
+    "allProvinces": "ทุกจังหวัด",
+    "petFriendlyOnly": "เฉพาะที่รับสัตว์เลี้ยง",
+    "noResults": "ไม่พบสถานที่"
   },
   "place": {
     "about": "เกี่ยวกับสถานที่นี้",
@@ -54,7 +61,8 @@
     "healthPassportDesc": "ดูบันทึกสุขภาพและตารางวัคซีนของสัตว์เลี้ยงทั้งหมด",
     "accessRecords": "ดูบันทึก",
     "savedSpots": "สถานที่ที่บันทึกไว้",
-    "upcomingActivities": "กิจกรรมที่กำลังจะมาถึง"
+    "upcomingActivities": "กิจกรรมที่กำลังจะมาถึง",
+    "subtitle": "แดชบอร์ดสำหรับคุณและสัตว์เลี้ยง"
   },
   "pet": {
     "createProfile": "สร้างโปรไฟล์สัตว์เลี้ยง",
@@ -72,6 +80,11 @@
     "healthCare": "สุขภาพและการดูแล",
     "vaccination": "สถานะวัคซีน",
     "specialNeeds": "ความต้องการพิเศษหรือแพ้อะไร",
+    "photo": "รูปสัตว์เลี้ยง",
+    "addPhoto": "เพิ่มรูป",
+    "removePhoto": "ลบรูป",
+    "photoHint": "JPG, PNG ไม่เกิน 5MB",
+    "photoTooLarge": "รูปต้องมีขนาดไม่เกิน 5MB",
     "saveProfile": "บันทึกโปรไฟล์",
     "cancel": "ยกเลิก",
     "dog": "สุนัข",

@@ -70,7 +70,11 @@ export default function Navbar() {
           {user ? (
             <div className="flex items-center gap-2">
               <Link href="/dashboard" className="w-10 h-10 rounded-full overflow-hidden bg-surface-container border-2 border-primary-container flex items-center justify-center">
-                <span className="material-symbols-outlined text-primary">person</span>
+                {user.user_metadata?.avatar_url ? (
+                  <img src={user.user_metadata.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+                ) : (
+                  <span className="material-symbols-outlined text-primary">person</span>
+                )}
               </Link>
               <button onClick={handleLogout} className="hidden md:block text-sm text-on-surface-variant hover:text-primary">
                 {t("nav.logout")}

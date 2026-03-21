@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/client";
+import { uploadImage } from "@/lib/uploadImage";
 import type { Pet } from "@/lib/types";
 import type { User } from "@supabase/supabase-js";
 
@@ -14,6 +15,9 @@ export default function DashboardContent() {
   const [user, setUser] = useState<User | null>(null);
   const [pets, setPets] = useState<Pet[]>([]);
   const [loading, setLoading] = useState(true);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
     async function load() {
       const supabase = createClient();
@@ -23,6 +27,7 @@ export default function DashboardContent() {
         return;
       }
       setUser(user);
+      setAvatarUrl(user.user_metadata?.avatar_url || null);
 
       const { data: petsData } = await supabase
         .from("pets")
@@ -48,14 +53,48 @@ export default function DashboardContent() {
 
   const userName = user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Friend";
 
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    if (file.size > 5 * 1024 * 1024) return;
+    setUploadingAvatar(true);
+    const url = await uploadImage("avatars", user.id, file);
+    if (url) {
+      setAvatarUrl(url);
+      const supabase = createClient();
+      await supabase.auth.updateUser({ data: { avatar_url: url } });
+    }
+    setUploadingAvatar(false);
+  };
+
   return (
     <>
       {/* Header */}
-      <header className="mb-8 md:mb-12">
-        <h1 className="font-headline text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-tight text-on-surface mb-2">
-          {t("dashboard.welcome")} {userName}!
-        </h1>
-        <p className="text-on-surface-variant text-lg">Your pet companion dashboard.</p>
+      <header className="mb-8 md:mb-12 flex items-center gap-6">
+        <div className="relative group">
+          <div
+            onClick={() => avatarInputRef.current?.click()}
+            className="w-20 h-20 md:w-24 md:h-24 rounded-full border-4 border-primary bg-surface-container flex items-center justify-center overflow-hidden cursor-pointer"
+          >
+            {uploadingAvatar ? (
+              <span className="material-symbols-outlined text-3xl text-primary animate-spin">progress_activity</span>
+            ) : avatarUrl ? (
+              <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+            ) : (
+              <span className="material-symbols-outlined text-4xl text-on-surface-variant/30">person</span>
+            )}
+          </div>
+          <div className="absolute bottom-0 right-0 w-7 h-7 rounded-full bg-primary flex items-center justify-center shadow-md cursor-pointer" onClick={() => avatarInputRef.current?.click()}>
+            <span className="material-symbols-outlined text-on-primary text-sm">photo_camera</span>
+          </div>
+          <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
+        </div>
+        <div>
+          <h1 className="font-headline text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-tight text-on-surface mb-2">
+            {t("dashboard.welcome")} {userName}!
+          </h1>
+          <p className="text-on-surface-variant text-lg">{t("dashboard.subtitle")}</p>
+        </div>
       </header>
 
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
@@ -74,9 +113,13 @@ export default function DashboardContent() {
                 <Link key={pet.id} href={`/pets/${pet.id}`}>
                   <div className="flex items-center gap-4 p-4 bg-surface-container-lowest rounded-lg hover:shadow-sm transition-all border border-transparent hover:border-outline-variant/10 cursor-pointer">
                     <div className="w-16 h-16 rounded-full overflow-hidden shrink-0 border-2 border-primary bg-surface-container flex items-center justify-center">
-                      <span className="material-symbols-outlined text-2xl text-on-surface-variant/50" style={{ fontVariationSettings: "'FILL' 1" }}>
-                        {pet.species === "cat" ? "pets" : "pets"}
-                      </span>
+                      {pet.photo_url ? (
+                        <img src={pet.photo_url} alt={pet.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <span className="material-symbols-outlined text-2xl text-on-surface-variant/50" style={{ fontVariationSettings: "'FILL' 1" }}>
+                          pets
+                        </span>
+                      )}
                     </div>
                     <div>
                       <h3 className="font-headline font-bold text-lg leading-tight">{pet.name}</h3>
