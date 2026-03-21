@@ -4,7 +4,7 @@ export async function uploadImage(
   bucket: "avatars" | "pet-photos",
   userId: string,
   file: File
-): Promise<string | null> {
+): Promise<string> {
   const supabase = createClient();
   const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
   const fileName = `${userId}/${Date.now()}.${ext}`;
@@ -14,8 +14,7 @@ export async function uploadImage(
     .upload(fileName, file, { upsert: true });
 
   if (error) {
-    console.error("Upload error:", error);
-    return null;
+    throw new Error(`Upload failed: ${error.message}`);
   }
 
   const { data } = supabase.storage.from(bucket).getPublicUrl(fileName);

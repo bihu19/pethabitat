@@ -14,6 +14,8 @@ export default function PetDetailContent({ petId }: { petId: string }) {
   const [pet, setPet] = useState<Pet | null>(null);
   const [loading, setLoading] = useState(true);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [photoError, setPhotoError] = useState("");
+  const [petCount, setPetCount] = useState(0);
   const photoInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -24,6 +26,13 @@ export default function PetDetailContent({ petId }: { petId: string }) {
 
       const { data } = await supabase.from("pets").select("*").eq("id", petId).single();
       setPet(data);
+
+      const { count } = await supabase
+        .from("pets")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", user.id);
+      setPetCount(count || 0);
+
       setLoading(false);
     }
     load();
@@ -32,16 +41,22 @@ export default function PetDetailContent({ petId }: { petId: string }) {
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !pet) return;
-    if (file.size > 5 * 1024 * 1024) return;
+    if (file.size > 5 * 1024 * 1024) {
+      setPhotoError(t("pet.photoTooLarge"));
+      return;
+    }
     setUploadingPhoto(true);
-    const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    setPhotoError("");
+    try {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
 
-    const url = await uploadImage("pet-photos", user.id, file);
-    if (url) {
+      const url = await uploadImage("pet-photos", user.id, file);
       await supabase.from("pets").update({ photo_url: url }).eq("id", petId);
       setPet({ ...pet, photo_url: url });
+    } catch (err: any) {
+      setPhotoError(err.message || "Failed to upload photo");
     }
     setUploadingPhoto(false);
   };
@@ -154,8 +169,21 @@ export default function PetDetailContent({ petId }: { petId: string }) {
         </div>
       </div>
 
+      {photoError && (
+        <div className="mt-4 bg-error-container text-on-error-container p-3 rounded-lg text-sm">{photoError}</div>
+      )}
+
       {/* Actions */}
       <div className="flex gap-4 mt-8 pt-6 border-t border-outline-variant/10">
+        {petCount < 5 && (
+          <Link
+            href="/pets/new"
+            className="px-6 py-2 rounded-full bg-primary text-on-primary font-bold hover:opacity-90 transition-colors flex items-center gap-2"
+          >
+            <span className="material-symbols-outlined text-sm">add</span>
+            {t("dashboard.addPet")}
+          </Link>
+        )}
         <button onClick={handleDelete} className="px-6 py-2 rounded-full border-2 border-error text-error font-bold hover:bg-error-container transition-colors">
           {t("common.delete")}
         </button>
