@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useI18n } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/client";
 import type { Place, Review } from "@/lib/types";
@@ -10,13 +10,59 @@ const typeIcons: Record<string, string> = {
   Hospital: "local_hospital", Clinic: "medical_services", "Pet Supplier": "storefront",
 };
 
-export default function PlaceDetailsContent({ place, reviews: initialReviews }: { place: Place; reviews: Review[] }) {
+export default function PlaceDetailsContent({ place: initialPlace, reviews: initialReviews }: { place: Place; reviews: Review[] }) {
   const { t } = useI18n();
+  const [place, setPlace] = useState(initialPlace);
   const [reviews, setReviews] = useState(initialReviews);
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [uploadingCover, setUploadingCover] = useState(false);
+  const coverInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+        const { data } = await supabase.from("user_roles").select("role").eq("user_id", user.id).single();
+        setIsAdmin(data?.role === "admin");
+      } catch { /* not admin */ }
+    })();
+  }, []);
+
+  const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) return;
+    setUploadingCover(true);
+    try {
+      const supabase = createClient();
+      const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+      const fileName = `covers/${place.id}-${Date.now()}.${ext}`;
+      const { error: uploadError } = await supabase.storage
+        .from("place-covers")
+        .upload(fileName, file, { upsert: true });
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage.from("place-covers").getPublicUrl(fileName);
+      const cover_image = urlData.publicUrl;
+
+      const { error: updateError } = await supabase
+        .from("places")
+        .update({ cover_image })
+        .eq("id", place.id);
+      if (updateError) throw updateError;
+
+      setPlace({ ...place, cover_image });
+    } catch (err) {
+      console.error("Cover upload failed:", err);
+    }
+    setUploadingCover(false);
+  };
 
   const avgRating = reviews.length > 0
     ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
@@ -56,6 +102,34 @@ export default function PlaceDetailsContent({ place, reviews: initialReviews }: 
     <div className="max-w-7xl mx-auto px-4 md:px-6 grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-12">
       {/* Main content */}
       <div className="lg:col-span-8 space-y-8 md:space-y-12">
+        {/* Cover Image */}
+        <div className="relative w-full h-48 md:h-64 rounded-2xl overflow-hidden bg-surface-container-low">
+          {place.cover_image ? (
+            <img src={place.cover_image} alt={place.name} className="w-full h-full object-cover" />
+          ) : (
+            <div className="w-full h-full flex flex-col items-center justify-center text-on-surface-variant/20">
+              <span className="material-symbols-outlined text-6xl" style={{ fontVariationSettings: "'FILL' 1" }}>{icon}</span>
+            </div>
+          )}
+          {isAdmin && (
+            <>
+              <button
+                onClick={() => coverInputRef.current?.click()}
+                disabled={uploadingCover}
+                className="absolute bottom-3 right-3 px-4 py-2 rounded-full bg-black/60 text-white text-xs font-semibold flex items-center gap-1.5 hover:bg-black/80 transition-colors backdrop-blur-sm"
+              >
+                {uploadingCover ? (
+                  <span className="material-symbols-outlined text-sm animate-spin">progress_activity</span>
+                ) : (
+                  <span className="material-symbols-outlined text-sm">photo_camera</span>
+                )}
+                {t("admin.uploadImage")}
+              </button>
+              <input ref={coverInputRef} type="file" accept="image/*" className="hidden" onChange={handleCoverUpload} />
+            </>
+          )}
+        </div>
+
         {/* Header */}
         <div>
           <div className="flex items-center gap-2 mb-3">
