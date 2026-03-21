@@ -44,6 +44,15 @@ export interface Pet {
   created_at: string;
 }
 
+export type UserRole = "admin" | "user";
+
+export interface UserRoleRecord {
+  id: string;
+  user_id: string;
+  role: UserRole;
+  created_at: string;
+}
+
 export interface MedicalRecord {
   id: string;
   pet_id: string;
