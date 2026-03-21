@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/client";
@@ -13,6 +13,32 @@ export default function PetFormContent() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [checking, setChecking] = useState(true);
+
+  // Check if user already has a pet (limit 1)
+  useEffect(() => {
+    async function checkPetLimit() {
+      try {
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) { router.push("/login"); return; }
+
+        const { count } = await supabase
+          .from("pets")
+          .select("*", { count: "exact", head: true })
+          .eq("user_id", user.id);
+
+        if (count && count >= 1) {
+          router.push("/dashboard");
+          return;
+        }
+      } catch {
+        // continue to form
+      }
+      setChecking(false);
+    }
+    checkPetLimit();
+  }, [router]);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -86,6 +112,14 @@ export default function PetFormContent() {
       setLoading(false);
     }
   };
+
+  if (checking) {
+    return (
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <span className="material-symbols-outlined text-4xl text-primary animate-spin">progress_activity</span>
+      </div>
+    );
+  }
 
   return (
     <>

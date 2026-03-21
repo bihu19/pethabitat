@@ -104,9 +104,11 @@ export default function DashboardContent() {
             <div className="absolute -top-10 -right-10 w-40 h-40 bg-primary-container/10 rounded-full blur-3xl"></div>
             <div className="flex justify-between items-center mb-6">
               <h2 className="font-headline text-xl md:text-2xl font-bold">{t("dashboard.petProfiles")}</h2>
-              <Link href="/pets/new" className="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center hover:bg-primary-container transition-colors">
-                <span className="material-symbols-outlined text-on-surface-variant">add</span>
-              </Link>
+              {pets.length === 0 && (
+                <Link href="/pets/new" className="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center hover:bg-primary-container transition-colors">
+                  <span className="material-symbols-outlined text-on-surface-variant">add</span>
+                </Link>
+              )}
             </div>
             <div className="space-y-4">
               {pets.map((pet) => (
@@ -185,11 +187,19 @@ export default function DashboardContent() {
               <h3 className="font-headline font-bold mb-1">{t("nav.explore")}</h3>
               <p className="text-sm text-on-surface-variant">Find pet-friendly spots near you</p>
             </Link>
-            <Link href="/pets/new" className="bg-secondary-container/10 p-6 rounded-xl hover:bg-secondary-container/20 transition-colors">
-              <span className="material-symbols-outlined text-secondary text-3xl mb-3">add_circle</span>
-              <h3 className="font-headline font-bold mb-1">{t("dashboard.addPet")}</h3>
-              <p className="text-sm text-on-surface-variant">Create a profile for your pet</p>
-            </Link>
+            {pets.length === 0 ? (
+              <Link href="/pets/new" className="bg-secondary-container/10 p-6 rounded-xl hover:bg-secondary-container/20 transition-colors">
+                <span className="material-symbols-outlined text-secondary text-3xl mb-3">add_circle</span>
+                <h3 className="font-headline font-bold mb-1">{t("dashboard.addPet")}</h3>
+                <p className="text-sm text-on-surface-variant">Create a profile for your pet</p>
+              </Link>
+            ) : (
+              <Link href={`/pets/${pets[0].id}`} className="bg-secondary-container/10 p-6 rounded-xl hover:bg-secondary-container/20 transition-colors">
+                <span className="material-symbols-outlined text-secondary text-3xl mb-3">pets</span>
+                <h3 className="font-headline font-bold mb-1">{t("pet.viewProfile")}</h3>
+                <p className="text-sm text-on-surface-variant">{t("pet.viewProfileDesc")}</p>
+              </Link>
+            )}
           </div>
         </section>
       </div>
