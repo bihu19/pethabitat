@@ -15,7 +15,7 @@ export default function PetFormContent() {
   const [error, setError] = useState("");
   const [checking, setChecking] = useState(true);
 
-  // Check if user already has a pet (limit 1)
+  // Check if user already has 5 pets (limit)
   useEffect(() => {
     async function checkPetLimit() {
       try {
@@ -87,7 +87,13 @@ export default function PetFormContent() {
       }
       let photo_url: string | null = null;
       if (photoFile) {
-        photo_url = await uploadImage("pet-photos", user.id, photoFile);
+        try {
+          photo_url = await uploadImage("pet-photos", user.id, photoFile);
+        } catch (uploadErr: any) {
+          setError(uploadErr.message || "Failed to upload photo. Make sure the pet-photos storage bucket exists in Supabase.");
+          setLoading(false);
+          return;
+        }
       }
 
       const { error } = await supabase.from("pets").insert({

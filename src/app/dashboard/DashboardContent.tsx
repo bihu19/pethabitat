@@ -58,11 +58,13 @@ export default function DashboardContent() {
     if (!file || !user) return;
     if (file.size > 5 * 1024 * 1024) return;
     setUploadingAvatar(true);
-    const url = await uploadImage("avatars", user.id, file);
-    if (url) {
+    try {
+      const url = await uploadImage("avatars", user.id, file);
       setAvatarUrl(url);
       const supabase = createClient();
       await supabase.auth.updateUser({ data: { avatar_url: url } });
+    } catch (err) {
+      console.error("Avatar upload failed:", err);
     }
     setUploadingAvatar(false);
   };
