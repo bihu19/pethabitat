@@ -15,8 +15,8 @@ export default function Footer() {
         </div>
         <div className="flex gap-12">
           <div className="flex flex-col gap-3">
-            <Link href="#" className="text-stone-500 hover:text-primary underline underline-offset-4 transition-all">{t("footer.privacy")}</Link>
-            <Link href="#" className="text-stone-500 hover:text-primary underline underline-offset-4 transition-all">{t("footer.terms")}</Link>
+            <Link href="/privacy" className="text-stone-500 hover:text-primary underline underline-offset-4 transition-all">{t("footer.privacy")}</Link>
+            <Link href="/terms" className="text-stone-500 hover:text-primary underline underline-offset-4 transition-all">{t("footer.terms")}</Link>
           </div>
           <div className="flex flex-col gap-3">
             <Link href="#" className="text-stone-500 hover:text-primary underline underline-offset-4 transition-all">{t("footer.partner")}</Link>
