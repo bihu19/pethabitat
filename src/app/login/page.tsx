@@ -1,18 +1,16 @@
 import Providers from "@/components/Providers";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import BottomNav from "@/components/BottomNav";
-import LandingContent from "./LandingContent";
+import LoginContent from "./LoginContent";
 
-export default function HomePage() {
+export default function LoginPage() {
   return (
     <Providers>
       <Navbar />
-      <main className="pt-20">
-        <LandingContent />
+      <main className="pt-24 pb-20 px-6">
+        <LoginContent />
       </main>
       <Footer />
-      <BottomNav />
     </Providers>
   );
 }
