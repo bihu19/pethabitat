@@ -41,6 +41,8 @@ export interface Pet {
   social_cats: string | null;
   special_needs: string | null;
   photo_url: string | null;
+  status: "alive" | "deceased";
+  date_of_death: string | null;
   created_at: string;
 }
 

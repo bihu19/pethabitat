@@ -16,6 +16,8 @@ export default function PetDetailContent({ petId }: { petId: string }) {
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [photoError, setPhotoError] = useState("");
   const [petCount, setPetCount] = useState(0);
+  const [showStatusModal, setShowStatusModal] = useState(false);
+  const [deathDate, setDeathDate] = useState("");
   const photoInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -117,9 +119,16 @@ export default function PetDetailContent({ petId }: { petId: string }) {
             <p className="text-on-surface-variant text-lg">
               {pet.breed || pet.species} {age ? `• ${age}` : ""}
             </p>
-            <div className="mt-2 inline-flex items-center gap-1 bg-secondary-container text-on-secondary-container px-3 py-1 rounded-full text-xs font-bold">
-              <span className="w-2 h-2 rounded-full bg-secondary"></span> {t("common.healthy")}
-            </div>
+            {pet.status === "deceased" ? (
+              <div className="mt-2 inline-flex items-center gap-1 bg-error-container text-on-error-container px-3 py-1 rounded-full text-xs font-bold">
+                <span className="material-symbols-outlined text-xs">pets</span>
+                {t("pet.deceased")} {pet.date_of_death ? `• ${new Date(pet.date_of_death).toLocaleDateString()}` : ""}
+              </div>
+            ) : (
+              <div className="mt-2 inline-flex items-center gap-1 bg-secondary-container text-on-secondary-container px-3 py-1 rounded-full text-xs font-bold">
+                <span className="w-2 h-2 rounded-full bg-secondary"></span> {t("pet.alive")}
+              </div>
+            )}
           </div>
         </div>
       </header>
@@ -133,6 +142,18 @@ export default function PetDetailContent({ petId }: { petId: string }) {
             {pet.breed && <div className="flex justify-between"><span className="text-on-surface-variant">{t("pet.breed")}</span><span className="font-medium">{pet.breed}</span></div>}
             {pet.birthday && <div className="flex justify-between"><span className="text-on-surface-variant">{t("pet.birthday")}</span><span className="font-medium">{new Date(pet.birthday).toLocaleDateString()}</span></div>}
             {pet.weight && <div className="flex justify-between"><span className="text-on-surface-variant">{t("pet.weight")}</span><span className="font-medium">{pet.weight} kg</span></div>}
+            <div className="flex justify-between">
+              <span className="text-on-surface-variant">{t("pet.statusSection")}</span>
+              <span className={`font-medium ${pet.status === "deceased" ? "text-error" : "text-secondary"}`}>
+                {pet.status === "deceased" ? t("pet.deceased") : t("pet.alive")}
+              </span>
+            </div>
+            {pet.date_of_death && (
+              <div className="flex justify-between">
+                <span className="text-on-surface-variant">{t("pet.dateOfDeath")}</span>
+                <span className="font-medium">{new Date(pet.date_of_death).toLocaleDateString()}</span>
+              </div>
+            )}
           </div>
         </div>
 
@@ -173,8 +194,46 @@ export default function PetDetailContent({ petId }: { petId: string }) {
         <div className="mt-4 bg-error-container text-on-error-container p-3 rounded-lg text-sm">{photoError}</div>
       )}
 
+      {/* Status change modal */}
+      {showStatusModal && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center px-4">
+          <div className="bg-surface rounded-2xl w-full max-w-sm p-6 shadow-2xl space-y-4">
+            <h3 className="font-headline font-bold text-lg">{t("pet.markDeceased")}</h3>
+            <p className="text-sm text-on-surface-variant">{t("pet.markDeceasedDesc")}</p>
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-bold text-on-surface-variant">{t("pet.dateOfDeath")} *</label>
+              <input
+                type="date"
+                className="w-full h-12 px-4 bg-surface-container-highest border-none rounded-lg focus:ring-2 focus:ring-error"
+                value={deathDate}
+                onChange={(e) => setDeathDate(e.target.value)}
+                required
+              />
+            </div>
+            <div className="flex justify-end gap-3 pt-2">
+              <button onClick={() => { setShowStatusModal(false); setDeathDate(""); }} className="px-5 py-2 rounded-full font-bold text-on-surface-variant hover:bg-surface-container transition-colors">
+                {t("pet.cancel")}
+              </button>
+              <button
+                onClick={async () => {
+                  if (!deathDate) return;
+                  const supabase = createClient();
+                  await supabase.from("pets").update({ status: "deceased", date_of_death: deathDate }).eq("id", petId);
+                  setPet({ ...pet!, status: "deceased", date_of_death: deathDate });
+                  setShowStatusModal(false);
+                  setDeathDate("");
+                }}
+                className="px-5 py-2 rounded-full font-bold bg-error text-white hover:opacity-90 transition-colors"
+              >
+                {t("common.save")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Actions */}
-      <div className="flex gap-4 mt-8 pt-6 border-t border-outline-variant/10">
+      <div className="flex flex-wrap gap-3 mt-8 pt-6 border-t border-outline-variant/10">
         {petCount < 5 && (
           <Link
             href="/pets/new"
@@ -183,6 +242,27 @@ export default function PetDetailContent({ petId }: { petId: string }) {
             <span className="material-symbols-outlined text-sm">add</span>
             {t("dashboard.addPet")}
           </Link>
+        )}
+        {pet.status === "alive" ? (
+          <button
+            onClick={() => setShowStatusModal(true)}
+            className="px-6 py-2 rounded-full border-2 border-on-surface-variant text-on-surface-variant font-bold hover:bg-surface-container transition-colors flex items-center gap-2"
+          >
+            <span className="material-symbols-outlined text-sm">pets</span>
+            {t("pet.markDeceased")}
+          </button>
+        ) : (
+          <button
+            onClick={async () => {
+              const supabase = createClient();
+              await supabase.from("pets").update({ status: "alive", date_of_death: null }).eq("id", petId);
+              setPet({ ...pet, status: "alive", date_of_death: null });
+            }}
+            className="px-6 py-2 rounded-full border-2 border-secondary text-secondary font-bold hover:bg-secondary-container transition-colors flex items-center gap-2"
+          >
+            <span className="material-symbols-outlined text-sm">favorite</span>
+            {t("pet.markAlive")}
+          </button>
         )}
         <button onClick={handleDelete} className="px-6 py-2 rounded-full border-2 border-error text-error font-bold hover:bg-error-container transition-colors">
           {t("common.delete")}

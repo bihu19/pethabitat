@@ -130,9 +130,15 @@ export default function DashboardContent() {
                       <p className="text-sm text-on-surface-variant">
                         {pet.breed || pet.species} {pet.birthday ? `• ${new Date().getFullYear() - new Date(pet.birthday).getFullYear()} years` : ""}
                       </p>
-                      <div className="mt-1 inline-flex items-center gap-1 bg-secondary-container text-on-secondary-container px-2 py-0.5 rounded-full text-xs font-medium">
-                        <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span> {t("common.healthy")}
-                      </div>
+                      {pet.status === "deceased" ? (
+                        <div className="mt-1 inline-flex items-center gap-1 bg-error-container text-on-error-container px-2 py-0.5 rounded-full text-xs font-medium">
+                          <span className="material-symbols-outlined text-[10px]">pets</span> {t("pet.deceased")}
+                        </div>
+                      ) : (
+                        <div className="mt-1 inline-flex items-center gap-1 bg-secondary-container text-on-secondary-container px-2 py-0.5 rounded-full text-xs font-medium">
+                          <span className="w-1.5 h-1.5 rounded-full bg-secondary"></span> {t("pet.alive")}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </Link>
