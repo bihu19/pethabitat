@@ -90,6 +90,13 @@
     "cancel": "Cancel",
     "viewProfile": "View Pet Profile",
     "viewProfileDesc": "Check on your pet's info and health records",
+    "statusSection": "Status",
+    "alive": "Alive",
+    "deceased": "Deceased",
+    "dateOfDeath": "Date of Death",
+    "markDeceased": "Mark as Deceased",
+    "markDeceasedDesc": "Please provide the date of death to update the status.",
+    "markAlive": "Mark as Alive",
     "dog": "Dog",
     "cat": "Cat",
     "other": "Other"

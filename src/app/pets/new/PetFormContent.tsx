@@ -52,6 +52,8 @@ export default function PetFormContent() {
     social_dogs: "",
     social_cats: "",
     special_needs: "",
+    status: "alive" as "alive" | "deceased",
+    date_of_death: "",
   });
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -108,6 +110,8 @@ export default function PetFormContent() {
         social_cats: form.social_cats || null,
         special_needs: form.special_needs || null,
         photo_url,
+        status: form.status,
+        date_of_death: form.status === "deceased" && form.date_of_death ? form.date_of_death : null,
       });
       if (error) throw error;
       router.push("/dashboard");
@@ -335,6 +339,54 @@ export default function PetFormContent() {
               onChange={(e) => setForm({ ...form, special_needs: e.target.value })}
             />
           </div>
+        </section>
+
+        {/* Status */}
+        <section className="bg-surface-container-low p-6 md:p-8 rounded-xl border border-outline-variant/15 space-y-6">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center">
+              <span className="material-symbols-outlined text-on-secondary-container">favorite</span>
+            </div>
+            <h2 className="font-headline font-bold text-xl md:text-2xl tracking-tight">{t("pet.statusSection")}</h2>
+          </div>
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={() => setForm({ ...form, status: "alive", date_of_death: "" })}
+              className={`flex-1 py-3 rounded-full font-bold text-sm transition-all ${
+                form.status === "alive"
+                  ? "bg-secondary-container text-on-secondary-container"
+                  : "bg-surface-container-highest text-on-surface-variant"
+              }`}
+            >
+              <span className="material-symbols-outlined text-sm align-middle mr-1">favorite</span>
+              {t("pet.alive")}
+            </button>
+            <button
+              type="button"
+              onClick={() => setForm({ ...form, status: "deceased" })}
+              className={`flex-1 py-3 rounded-full font-bold text-sm transition-all ${
+                form.status === "deceased"
+                  ? "bg-error-container text-on-error-container"
+                  : "bg-surface-container-highest text-on-surface-variant"
+              }`}
+            >
+              <span className="material-symbols-outlined text-sm align-middle mr-1">pets</span>
+              {t("pet.deceased")}
+            </button>
+          </div>
+          {form.status === "deceased" && (
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-bold text-on-surface-variant">{t("pet.dateOfDeath")} *</label>
+              <input
+                type="date"
+                className="w-full h-14 px-6 bg-surface-container-highest border-none rounded-lg focus:ring-2 focus:ring-error font-medium"
+                value={form.date_of_death}
+                onChange={(e) => setForm({ ...form, date_of_death: e.target.value })}
+                required
+              />
+            </div>
+          )}
         </section>
 
         {/* Actions */}
