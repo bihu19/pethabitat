@@ -15,7 +15,7 @@ export default function PetFormContent() {
   const [error, setError] = useState("");
   const [checking, setChecking] = useState(true);
 
-  // Check if user already has 5 pets (limit)
+  // Check if user already has 3 pets (limit)
   useEffect(() => {
     async function checkPetLimit() {
       try {
@@ -28,7 +28,7 @@ export default function PetFormContent() {
           .select("*", { count: "exact", head: true })
           .eq("user_id", user.id);
 
-        if (count && count >= 5) {
+        if (count && count >= 3) {
           router.push("/dashboard");
           return;
         }

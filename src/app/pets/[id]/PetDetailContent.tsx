@@ -83,7 +83,7 @@ export default function PetDetailContent({ petId }: { petId: string }) {
   }
 
   const age = pet.birthday
-    ? `${new Date().getFullYear() - new Date(pet.birthday).getFullYear()} years`
+    ? `${Math.floor((new Date(pet.status === "deceased" && pet.date_of_death ? pet.date_of_death : Date.now()).getTime() - new Date(pet.birthday).getTime()) / (365.25 * 24 * 60 * 60 * 1000))} years`
     : "";
 
   return (
@@ -234,7 +234,7 @@ export default function PetDetailContent({ petId }: { petId: string }) {
 
       {/* Actions */}
       <div className="flex flex-wrap gap-3 mt-8 pt-6 border-t border-outline-variant/10">
-        {petCount < 5 && (
+        {petCount < 3 && (
           <Link
             href="/pets/new"
             className="px-6 py-2 rounded-full bg-primary text-on-primary font-bold hover:opacity-90 transition-colors flex items-center gap-2"
