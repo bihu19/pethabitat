@@ -1,8 +1,8 @@
-export type PlaceType = "Hotel" | "Pet Hotel" | "Cafe" | "Restaurant" | "Hospital" | "Clinic" | "Pet Supplier";
+export type PlaceType = "Hotel" | "Pet Hotel" | "Cafe" | "Restaurant" | "Hospital" | "Clinic" | "Pet Supplier" | "Shopping Mall" | "Park" | "Pool" | "Pet School";
 
 export interface Place {
   id: string;
-  place_type: PlaceType;
+  place_type: string;
   name: string;
   province: string;
   google_maps_url: string | null;

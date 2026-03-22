@@ -160,7 +160,9 @@
     "saved": "Saved!",
     "deleted": "Deleted!",
     "searchPlaces": "Search places...",
-    "noPlaces": "No places yet. Add your first place!"
+    "noPlaces": "No places yet. Add your first place!",
+    "imageUrlPlaceholder": "Paste image URL...",
+    "imageUrlHint": "Paste a link to an image (Google Maps, website, etc.)"
   },
   "categories": {
     "Hotel": "Pet-Friendly Hotels",
@@ -169,6 +171,10 @@
     "Restaurant": "Restaurants",
     "Hospital": "Pet Hospitals",
     "Clinic": "Vet Clinics",
-    "Pet Supplier": "Pet Shops"
+    "Pet Supplier": "Pet Shops",
+    "Shopping Mall": "Shopping Malls",
+    "Park": "Parks",
+    "Pool": "Pools",
+    "Pet School": "Pet Schools"
   }
 }

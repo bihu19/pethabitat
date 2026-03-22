@@ -11,43 +11,60 @@ const typeColors: Record<string, { bg: string; text: string }> = {
   Hospital: { bg: "bg-error-container", text: "text-on-error-container" },
   Clinic: { bg: "bg-error-container", text: "text-on-error-container" },
   "Pet Supplier": { bg: "bg-surface-container-highest", text: "text-on-surface-variant" },
+  "Shopping Mall": { bg: "bg-tertiary-container", text: "text-on-tertiary-container" },
+  Park: { bg: "bg-secondary-container", text: "text-on-secondary-container" },
+  Pool: { bg: "bg-primary-container", text: "text-on-primary-container" },
+  "Pet School": { bg: "bg-primary-container", text: "text-on-primary-container" },
 };
 
 const typeIcons: Record<string, string> = {
-  Hotel: "hotel",
-  "Pet Hotel": "pets",
-  Cafe: "local_cafe",
-  Restaurant: "restaurant",
-  Hospital: "local_hospital",
-  Clinic: "medical_services",
-  "Pet Supplier": "storefront",
+  Hotel: "hotel", "Pet Hotel": "pets", Cafe: "local_cafe", Restaurant: "restaurant",
+  Hospital: "local_hospital", Clinic: "medical_services", "Pet Supplier": "storefront",
+  "Shopping Mall": "shopping_bag", Park: "park", Pool: "pool", "Pet School": "school",
 };
 
+function parseTypes(placeType: string): string[] {
+  return placeType.split(",").map((t) => t.trim()).filter(Boolean);
+}
+
 export default function PlaceCard({ place }: { place: Place }) {
-  const colors = typeColors[place.place_type] || typeColors["Pet Supplier"];
-  const icon = typeIcons[place.place_type] || "place";
+  const types = parseTypes(place.place_type);
+  const firstType = types[0] || "Pet Supplier";
+  const colors = typeColors[firstType] || typeColors["Pet Supplier"];
+  const icon = typeIcons[firstType] || "place";
 
   return (
     <Link href={`/places/${place.id}`}>
       <div className="bg-surface-container-low p-4 rounded-lg group hover:bg-surface-container-lowest transition-all cursor-pointer border border-transparent hover:border-outline-variant/20">
         <div className="flex gap-4">
           <div className="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0 bg-surface-container flex items-center justify-center">
-            <span className="material-symbols-outlined text-4xl text-on-surface-variant/30" style={{ fontVariationSettings: "'FILL' 1" }}>
-              {icon}
-            </span>
+            {place.cover_image ? (
+              <img src={place.cover_image} alt={place.name} className="w-full h-full object-cover" />
+            ) : (
+              <span className="material-symbols-outlined text-4xl text-on-surface-variant/30" style={{ fontVariationSettings: "'FILL' 1" }}>
+                {icon}
+              </span>
+            )}
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex justify-between items-start gap-2">
               <h3 className="font-headline font-bold text-on-surface truncate">{place.name}</h3>
-              <span className={`${colors.bg} ${colors.text} text-[10px] px-2 py-0.5 rounded-full font-bold whitespace-nowrap`}>
-                {place.place_type.toUpperCase()}
-              </span>
+            </div>
+            <div className="flex flex-wrap gap-1 mt-1">
+              {types.map((t) => {
+                const c = typeColors[t] || typeColors["Pet Supplier"];
+                return (
+                  <span key={t} className={`${c.bg} ${c.text} text-[10px] px-2 py-0.5 rounded-full font-bold whitespace-nowrap`}>
+                    {t.toUpperCase()}
+                  </span>
+                );
+              })}
             </div>
             <p className="text-xs text-on-surface-variant mt-1 flex items-center gap-1">
               <span className="material-symbols-outlined text-xs">location_on</span>
               {place.province}
             </p>
-            <p className="text-xs text-on-surface-variant mt-2 line-clamp-2">
+            <p className="text-xs text-on-surface-variant mt-1 line-clamp-2">
               {place.description || "Pet-friendly location"}
             </p>
             {place.google_maps_url && (

@@ -14,6 +14,10 @@ const typeMarkerColors: Record<string, string> = {
   Hospital: "#ba1a1a",
   Clinic: "#ba1a1a",
   "Pet Supplier": "#897266",
+  "Shopping Mall": "#7c4dff",
+  Park: "#4caf50",
+  Pool: "#03a9f4",
+  "Pet School": "#ff9800",
 };
 
 export default function MapView({
@@ -71,17 +75,18 @@ export default function MapView({
     }).addTo(map);
 
     places.forEach((place) => {
-      const color = typeMarkerColors[place.place_type] || "#897266";
+      const firstType = place.place_type.split(",")[0].trim();
+      const color = typeMarkerColors[firstType] || "#897266";
+      const iconName = firstType === "Hotel" || firstType === "Pet Hotel" ? "hotel" :
+        firstType === "Cafe" || firstType === "Restaurant" ? "restaurant" :
+        firstType === "Hospital" || firstType === "Clinic" ? "medical_services" :
+        firstType === "Park" ? "park" : firstType === "Pool" ? "pool" :
+        firstType === "Shopping Mall" ? "shopping_bag" : firstType === "Pet School" ? "school" : "storefront";
 
       const icon = L!.divIcon({
         className: "custom-marker",
         html: `<div style="background:${color};width:32px;height:32px;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;cursor:pointer;transform:${selectedPlace === place.id ? 'scale(1.3)' : 'scale(1)'};transition:transform 0.2s;">
-          <span class="material-symbols-outlined" style="color:white;font-size:16px;font-variation-settings:'FILL' 1;">${
-            place.place_type === "Hotel" || place.place_type === "Pet Hotel" ? "hotel" :
-            place.place_type === "Cafe" || place.place_type === "Restaurant" ? "restaurant" :
-            place.place_type === "Hospital" || place.place_type === "Clinic" ? "medical_services" :
-            "storefront"
-          }</span>
+          <span class="material-symbols-outlined" style="color:white;font-size:16px;font-variation-settings:'FILL' 1;">${iconName}</span>
         </div>`,
         iconSize: [32, 32],
         iconAnchor: [16, 16],
@@ -93,7 +98,7 @@ export default function MapView({
         <div style="font-family:'Plus Jakarta Sans',sans-serif;min-width:180px;">
           <h3 style="font-weight:700;font-size:14px;margin:0 0 4px;">${place.name}</h3>
           <p style="color:#564338;font-size:12px;margin:0 0 4px;">${place.province}</p>
-          <span style="background:${color};color:white;font-size:10px;padding:2px 8px;border-radius:12px;font-weight:700;">${place.place_type}</span>
+          <span style="background:${color};color:white;font-size:10px;padding:2px 8px;border-radius:12px;font-weight:700;">${place.place_type.split(",").join(", ")}</span>
           ${place.google_maps_url ? `<br/><a href="${place.google_maps_url}" target="_blank" rel="noopener" style="color:#0060ac;font-size:11px;display:inline-block;margin-top:6px;">Open in Google Maps &rarr;</a>` : ''}
         </div>
       `);

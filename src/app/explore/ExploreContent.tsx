@@ -15,7 +15,18 @@ const filterTypes = [
   { key: "Cafe", icon: "local_cafe", labelEn: "Cafes", labelTh: "คาเฟ่" },
   { key: "Hospital", icon: "medical_services", labelEn: "Clinics", labelTh: "คลินิก" },
   { key: "Pet Supplier", icon: "storefront", labelEn: "Pet Shops", labelTh: "ร้านสัตว์เลี้ยง" },
+  { key: "Shopping Mall", icon: "shopping_bag", labelEn: "Malls", labelTh: "ห้างสรรพสินค้า" },
+  { key: "Park", icon: "park", labelEn: "Parks", labelTh: "สวนสาธารณะ" },
+  { key: "Pool", icon: "pool", labelEn: "Pools", labelTh: "สระว่ายน้ำ" },
+  { key: "Pet School", icon: "school", labelEn: "Pet Schools", labelTh: "โรงเรียนสัตว์เลี้ยง" },
 ];
+
+function placeHasType(placeType: string, filterKey: string): boolean {
+  const types = placeType.split(",").map((t) => t.trim());
+  if (filterKey === "Cafe") return types.some((t) => t === "Cafe" || t === "Restaurant");
+  if (filterKey === "Hospital") return types.some((t) => t === "Hospital" || t === "Clinic");
+  return types.includes(filterKey);
+}
 
 export default function ExploreContent({ initialPlaces }: { initialPlaces: Place[] }) {
   const searchParams = useSearchParams();
@@ -40,11 +51,7 @@ export default function ExploreContent({ initialPlaces }: { initialPlaces: Place
   const filteredPlaces = useMemo(() => {
     let filtered = places;
     if (activeFilter !== "all") {
-      filtered = filtered.filter((p) => {
-        if (activeFilter === "Cafe") return p.place_type === "Cafe" || p.place_type === "Restaurant";
-        if (activeFilter === "Hospital") return p.place_type === "Hospital" || p.place_type === "Clinic";
-        return p.place_type === activeFilter;
-      });
+      filtered = filtered.filter((p) => placeHasType(p.place_type, activeFilter));
     }
     if (selectedProvince !== "all") {
       filtered = filtered.filter((p) => p.province === selectedProvince);
