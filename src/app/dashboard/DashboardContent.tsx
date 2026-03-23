@@ -106,7 +106,7 @@ export default function DashboardContent() {
             <div className="absolute -top-10 -right-10 w-40 h-40 bg-primary-container/10 rounded-full blur-3xl"></div>
             <div className="flex justify-between items-center mb-6">
               <h2 className="font-headline text-xl md:text-2xl font-bold">{t("dashboard.petProfiles")}</h2>
-              {pets.length < 5 && (
+              {pets.length < 3 && (
                 <Link href="/pets/new" className="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center hover:bg-primary-container transition-colors">
                   <span className="material-symbols-outlined text-on-surface-variant">add</span>
                 </Link>
@@ -128,7 +128,7 @@ export default function DashboardContent() {
                     <div>
                       <h3 className="font-headline font-bold text-lg leading-tight">{pet.name}</h3>
                       <p className="text-sm text-on-surface-variant">
-                        {pet.breed || pet.species} {pet.birthday ? `• ${new Date().getFullYear() - new Date(pet.birthday).getFullYear()} years` : ""}
+                        {pet.breed || pet.species} {pet.birthday ? `• ${Math.floor((new Date(pet.status === "deceased" && pet.date_of_death ? pet.date_of_death : Date.now()).getTime() - new Date(pet.birthday).getTime()) / (365.25 * 24 * 60 * 60 * 1000))} years` : ""}
                       </p>
                       {pet.status === "deceased" ? (
                         <div className="mt-1 inline-flex items-center gap-1 bg-error-container text-on-error-container px-2 py-0.5 rounded-full text-xs font-medium">
@@ -195,7 +195,7 @@ export default function DashboardContent() {
               <h3 className="font-headline font-bold mb-1">{t("nav.explore")}</h3>
               <p className="text-sm text-on-surface-variant">Find pet-friendly spots near you</p>
             </Link>
-            {pets.length < 5 ? (
+            {pets.length < 3 ? (
               <Link href="/pets/new" className="bg-secondary-container/10 p-6 rounded-xl hover:bg-secondary-container/20 transition-colors">
                 <span className="material-symbols-outlined text-secondary text-3xl mb-3">add_circle</span>
                 <h3 className="font-headline font-bold mb-1">{t("dashboard.addPet")}</h3>
