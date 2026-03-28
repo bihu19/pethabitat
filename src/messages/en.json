@@ -126,7 +126,8 @@
     "hasAccount": "Already have an account?",
     "signUp": "Sign Up",
     "signIn": "Sign In",
-    "orContinueWith": "Or continue with"
+    "orContinueWith": "Or continue with email",
+    "continueWithGoogle": "Continue with Google"
   },
   "common": {
     "loading": "Loading...",
