@@ -26,6 +26,7 @@ export const samplePlaces: Place[] = rawPlaces.map((p, i) => {
     ...p,
     cover_image: null,
     pet_friendly: (p as any).pet_friendly || null,
+    pet_amenities: null,
     latitude: lat + (Math.random() - 0.5) * 0.05,
     longitude: lng + (Math.random() - 0.5) * 0.05,
     created_at: new Date().toISOString(),

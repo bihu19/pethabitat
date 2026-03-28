@@ -16,7 +16,7 @@ function parseTypes(placeType: string): string[] {
 }
 
 export default function PlaceDetailsContent({ place, reviews: initialReviews }: { place: Place; reviews: Review[] }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [reviews, setReviews] = useState(initialReviews);
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [rating, setRating] = useState(5);
@@ -146,6 +146,30 @@ export default function PlaceDetailsContent({ place, reviews: initialReviews }: 
                   <p className="text-sm text-on-surface-variant whitespace-pre-line">{place.pet_condition}</p>
                 </div>
               )}
+            </div>
+          </div>
+        )}
+
+        {/* Pet Amenities */}
+        {place.pet_amenities && (
+          <div className="space-y-4">
+            <h2 className="font-headline text-xl md:text-2xl font-bold">{t("place.petAmenities")}</h2>
+            <div className="flex flex-wrap gap-2">
+              {place.pet_amenities.split(",").map((item) => {
+                const trimmed = item.trim();
+                const labels: Record<string, { th: string; en: string }> = {
+                  pet_bed: { th: "เบาะสัตว์เลี้ยง", en: "Pet Bed" },
+                  food_tray: { th: "ถาดรองกินอาหาร", en: "Food Tray" },
+                  pee_pad: { th: "แผ่นรองฉี่", en: "Pee Pad" },
+                };
+                const label = labels[trimmed];
+                return (
+                  <span key={trimmed} className="inline-flex items-center gap-1.5 px-4 py-2 bg-secondary-container/30 text-on-secondary-container rounded-full text-sm font-medium">
+                    <span className="material-symbols-outlined text-sm">check_circle</span>
+                    {label ? (locale === "th" ? label.th : label.en) : trimmed}
+                  </span>
+                );
+              })}
             </div>
           </div>
         )}

@@ -17,6 +17,12 @@ const typeIconMap: Record<string, string> = {
   "Shopping Mall": "shopping_bag", Park: "park", Pool: "pool", "Pet School": "school",
 };
 
+const amenityOptions = [
+  { key: "pet_bed", labelTh: "เบาะสัตว์เลี้ยง", labelEn: "Pet Bed" },
+  { key: "food_tray", labelTh: "ถาดรองกินอาหาร", labelEn: "Food Tray" },
+  { key: "pee_pad", labelTh: "แผ่นรองฉี่", labelEn: "Pee Pad" },
+];
+
 const emptyForm = {
   name: "",
   place_types: [] as string[],
@@ -28,6 +34,9 @@ const emptyForm = {
   pet_condition: "",
   pet_friendly: "",
   cover_image: "",
+  has_pet_amenities: false,
+  pet_amenities: [] as string[],
+  pet_amenities_other: "",
   latitude: "13.7563",
   longitude: "100.5018",
 };
@@ -55,6 +64,10 @@ export default function AdminContent({ initialPlaces }: { initialPlaces: Place[]
 
   const openEditForm = (place: Place) => {
     setEditingId(place.id);
+    const existingAmenities = place.pet_amenities ? place.pet_amenities.split(",").map((a) => a.trim()) : [];
+    const knownKeys = amenityOptions.map((a) => a.key);
+    const knownSelected = existingAmenities.filter((a) => knownKeys.includes(a));
+    const otherItems = existingAmenities.filter((a) => !knownKeys.includes(a));
     setForm({
       name: place.name,
       place_types: parseTypes(place.place_type),
@@ -66,6 +79,9 @@ export default function AdminContent({ initialPlaces }: { initialPlaces: Place[]
       pet_condition: place.pet_condition || "",
       pet_friendly: place.pet_friendly || "",
       cover_image: place.cover_image || "",
+      has_pet_amenities: existingAmenities.length > 0,
+      pet_amenities: knownSelected,
+      pet_amenities_other: otherItems.join(", "),
       latitude: String(place.latitude),
       longitude: String(place.longitude),
     });
@@ -96,6 +112,16 @@ export default function AdminContent({ initialPlaces }: { initialPlaces: Place[]
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
+      // Build pet_amenities string
+      let pet_amenities: string | null = null;
+      if (form.has_pet_amenities) {
+        const items = [...form.pet_amenities];
+        if (form.pet_amenities_other.trim()) {
+          items.push(...form.pet_amenities_other.split(",").map((s) => s.trim()).filter(Boolean));
+        }
+        pet_amenities = items.length > 0 ? items.join(",") : null;
+      }
+
       const placeData = {
         name: form.name,
         place_type: form.place_types.join(","),
@@ -107,6 +133,7 @@ export default function AdminContent({ initialPlaces }: { initialPlaces: Place[]
         pet_condition: form.pet_condition || null,
         pet_friendly: form.pet_friendly || null,
         cover_image: form.cover_image || null,
+        pet_amenities,
         latitude: parseFloat(form.latitude) || 13.7563,
         longitude: parseFloat(form.longitude) || 100.5018,
       };
@@ -333,6 +360,67 @@ export default function AdminContent({ initialPlaces }: { initialPlaces: Place[]
                   <input className="w-full h-12 px-4 bg-surface-container-highest border-none rounded-lg focus:ring-2 focus:ring-primary text-sm" value={form.pet_friendly} onChange={(e) => setForm({ ...form, pet_friendly: e.target.value })} />
                 </div>
               </div>
+
+              {/* Pet Amenities - shown when Hotel or Pet Hotel is selected */}
+              {(form.place_types.includes("Hotel") || form.place_types.includes("Pet Hotel")) && (
+                <div className="bg-surface-container-low p-4 rounded-xl border border-outline-variant/15 space-y-4">
+                  <label className="text-sm font-bold text-on-surface-variant">{t("admin.petAmenities")}</label>
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setForm({ ...form, has_pet_amenities: true })}
+                      className={`flex-1 py-2.5 rounded-full font-bold text-xs transition-all ${
+                        form.has_pet_amenities ? "bg-secondary-container text-on-secondary-container" : "bg-surface-container-highest text-on-surface-variant"
+                      }`}
+                    >
+                      {t("admin.yes")}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setForm({ ...form, has_pet_amenities: false, pet_amenities: [], pet_amenities_other: "" })}
+                      className={`flex-1 py-2.5 rounded-full font-bold text-xs transition-all ${
+                        !form.has_pet_amenities ? "bg-surface-container text-on-surface-variant" : "bg-surface-container-highest text-on-surface-variant"
+                      }`}
+                    >
+                      {t("admin.no")}
+                    </button>
+                  </div>
+                  {form.has_pet_amenities && (
+                    <div className="space-y-3">
+                      <div className="flex flex-wrap gap-2">
+                        {amenityOptions.map((a) => (
+                          <button
+                            key={a.key}
+                            type="button"
+                            onClick={() => setForm((f) => ({
+                              ...f,
+                              pet_amenities: f.pet_amenities.includes(a.key)
+                                ? f.pet_amenities.filter((k) => k !== a.key)
+                                : [...f.pet_amenities, a.key],
+                            }))}
+                            className={`px-4 py-2 rounded-full text-xs font-semibold transition-all ${
+                              form.pet_amenities.includes(a.key)
+                                ? "bg-primary text-on-primary"
+                                : "bg-surface-container-highest text-on-surface-variant hover:bg-surface-container"
+                            }`}
+                          >
+                            {locale === "th" ? a.labelTh : a.labelEn}
+                          </button>
+                        ))}
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <label className="text-xs font-bold text-on-surface-variant">{t("admin.otherAmenities")}</label>
+                        <input
+                          className="w-full h-10 px-4 bg-surface-container-highest border-none rounded-lg focus:ring-2 focus:ring-primary text-sm"
+                          placeholder={t("admin.otherAmenitiesPlaceholder")}
+                          value={form.pet_amenities_other}
+                          onChange={(e) => setForm({ ...form, pet_amenities_other: e.target.value })}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex flex-col gap-1">
