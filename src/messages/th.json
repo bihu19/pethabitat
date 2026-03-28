@@ -126,7 +126,8 @@
     "hasAccount": "มีบัญชีแล้ว?",
     "signUp": "สมัครสมาชิก",
     "signIn": "เข้าสู่ระบบ",
-    "orContinueWith": "หรือดำเนินการด้วย"
+    "orContinueWith": "หรือดำเนินการด้วยอีเมล",
+    "continueWithGoogle": "ดำเนินการด้วย Google"
   },
   "common": {
     "loading": "กำลังโหลด...",
