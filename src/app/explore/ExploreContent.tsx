@@ -7,6 +7,7 @@ import PlaceCard from "@/components/PlaceCard";
 import MapView from "@/components/MapView";
 import type { Place } from "@/lib/types";
 import { samplePlaces } from "@/lib/sampleData";
+import { provinces as allProvinces } from "@/lib/provinces";
 
 const filterTypes = [
   { key: "all", icon: "all_inclusive", labelEn: "All", labelTh: "ทั้งหมด" },
@@ -42,10 +43,10 @@ export default function ExploreContent({ initialPlaces }: { initialPlaces: Place
   // Use sample data if no real data
   const places = initialPlaces.length > 0 ? initialPlaces : samplePlaces;
 
-  // Get unique provinces from places
-  const provinces = useMemo(() => {
-    const set = new Set(places.map((p) => p.province));
-    return Array.from(set).sort();
+  // Get provinces that have places, with bilingual labels
+  const availableProvinces = useMemo(() => {
+    const placeProvinces = new Set(places.map((p) => p.province));
+    return allProvinces.filter((p) => placeProvinces.has(p.th));
   }, [places]);
 
   const filteredPlaces = useMemo(() => {
@@ -149,8 +150,8 @@ export default function ExploreContent({ initialPlaces }: { initialPlaces: Place
                   className="w-full h-10 px-3 bg-surface-container-highest border-none rounded-lg text-sm focus:ring-2 focus:ring-primary"
                 >
                   <option value="all">{t("explore.allProvinces")}</option>
-                  {provinces.map((p) => (
-                    <option key={p} value={p}>{p}</option>
+                  {availableProvinces.map((p) => (
+                    <option key={p.th} value={p.th}>{locale === "th" ? p.th : `${p.en} (${p.th})`}</option>
                   ))}
                 </select>
               </div>

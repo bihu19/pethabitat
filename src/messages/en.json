@@ -52,7 +52,8 @@
     "communityFeedback": "Community Feedback",
     "writeReview": "Write a review",
     "noReviews": "No reviews yet. Be the first!",
-    "petFriendly": "Pet Friendly"
+    "petFriendly": "Pet Friendly",
+    "petAmenities": "Pet Amenities"
   },
   "dashboard": {
     "welcome": "Welcome back!",
@@ -169,7 +170,12 @@
     "searchPlaces": "Search places...",
     "noPlaces": "No places yet. Add your first place!",
     "imageUrlPlaceholder": "Paste image URL...",
-    "imageUrlHint": "Paste a link to an image (Google Maps, website, etc.)"
+    "imageUrlHint": "Paste a link to an image (Google Maps, website, etc.)",
+    "petAmenities": "Pet Amenities",
+    "yes": "Yes",
+    "no": "No",
+    "otherAmenities": "Other (specify)",
+    "otherAmenitiesPlaceholder": "e.g. pet pool, grooming service"
   },
   "categories": {
     "Hotel": "Pet-Friendly Hotels",

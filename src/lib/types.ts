@@ -12,6 +12,7 @@ export interface Place {
   pet_condition: string | null;
   pet_friendly: string | null;
   cover_image: string | null;
+  pet_amenities: string | null;
   latitude: number;
   longitude: number;
   created_at: string;

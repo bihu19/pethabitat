@@ -52,7 +52,8 @@
     "communityFeedback": "รีวิวจากชุมชน",
     "writeReview": "เขียนรีวิว",
     "noReviews": "ยังไม่มีรีวิว เป็นคนแรกเลย!",
-    "petFriendly": "เป็นมิตรกับสัตว์เลี้ยง"
+    "petFriendly": "เป็นมิตรกับสัตว์เลี้ยง",
+    "petAmenities": "สิ่งอำนวยความสะดวกสำหรับสัตว์เลี้ยง"
   },
   "dashboard": {
     "welcome": "ยินดีต้อนรับกลับ!",
@@ -169,7 +170,12 @@
     "searchPlaces": "ค้นหาสถานที่...",
     "noPlaces": "ยังไม่มีสถานที่ เพิ่มสถานที่แรกเลย!",
     "imageUrlPlaceholder": "วางลิงก์รูปภาพ...",
-    "imageUrlHint": "วางลิงก์ไปยังรูปภาพ (Google Maps, เว็บไซต์ ฯลฯ)"
+    "imageUrlHint": "วางลิงก์ไปยังรูปภาพ (Google Maps, เว็บไซต์ ฯลฯ)",
+    "petAmenities": "สิ่งอำนวยความสะดวกสำหรับสัตว์เลี้ยง",
+    "yes": "มี",
+    "no": "ไม่มี",
+    "otherAmenities": "อื่น ๆ (ระบุ)",
+    "otherAmenitiesPlaceholder": "เช่น สระว่ายน้ำสัตว์เลี้ยง, บริการกรูมมิ่ง"
   },
   "categories": {
     "Hotel": "โรงแรมที่พักพาสัตว์เลี้ยงเข้าได้",
