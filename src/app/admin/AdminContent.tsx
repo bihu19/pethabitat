@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useI18n } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/client";
+import { provinces } from "@/lib/provinces";
 import type { Place, PlaceType } from "@/lib/types";
 
 const allPlaceTypes: PlaceType[] = [
@@ -36,7 +37,7 @@ function parseTypes(placeType: string): string[] {
 }
 
 export default function AdminContent({ initialPlaces }: { initialPlaces: Place[] }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [places, setPlaces] = useState<Place[]>(initialPlaces);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -273,12 +274,17 @@ export default function AdminContent({ initialPlaces }: { initialPlaces: Place[]
                 </div>
                 <div className="flex flex-col gap-1">
                   <label className="text-sm font-bold text-on-surface-variant">{t("admin.province")}</label>
-                  <input
+                  <select
                     className="w-full h-12 px-4 bg-surface-container-highest border-none rounded-lg focus:ring-2 focus:ring-primary"
                     value={form.province}
                     onChange={(e) => setForm({ ...form, province: e.target.value })}
                     required
-                  />
+                  >
+                    <option value="">{t("explore.allProvinces")}</option>
+                    {provinces.map((p) => (
+                      <option key={p.th} value={p.th}>{locale === "th" ? p.th : `${p.en} (${p.th})`}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
