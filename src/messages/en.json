@@ -195,7 +195,12 @@
     "yes": "Yes",
     "no": "No",
     "otherAmenities": "Other (specify)",
-    "otherAmenitiesPlaceholder": "e.g. pet pool, grooming service"
+    "otherAmenitiesPlaceholder": "e.g. pet pool, grooming service",
+    "extractingCoords": "Extracting coordinates...",
+    "coordinates": "Coordinates",
+    "fromGoogleMaps": "From Google Maps",
+    "fromProvince": "From province (approximate)",
+    "coordsHint": "Coordinates are auto-extracted from Google Maps link. You can also edit manually."
   },
   "categories": {
     "Hotel": "Pet-Friendly Hotels",
