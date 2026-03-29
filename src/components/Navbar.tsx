@@ -91,7 +91,7 @@ export default function Navbar() {
           </button>
           {user ? (
             <div className="flex items-center gap-2">
-              <Link href="/dashboard" className="w-10 h-10 rounded-full overflow-hidden bg-surface-container border-2 border-primary-container flex items-center justify-center">
+              <Link href="/profile" className="w-10 h-10 rounded-full overflow-hidden bg-surface-container border-2 border-primary-container flex items-center justify-center">
                 {user.user_metadata?.avatar_url ? (
                   <img src={user.user_metadata.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
                 ) : (

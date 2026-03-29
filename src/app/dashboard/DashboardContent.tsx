@@ -1,11 +1,10 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/client";
-import { uploadImage } from "@/lib/uploadImage";
 import type { Pet } from "@/lib/types";
 import type { User } from "@supabase/supabase-js";
 
@@ -16,8 +15,6 @@ export default function DashboardContent() {
   const [pets, setPets] = useState<Pet[]>([]);
   const [loading, setLoading] = useState(true);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const [uploadingAvatar, setUploadingAvatar] = useState(false);
-  const avatarInputRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
     async function load() {
       const supabase = createClient();
@@ -53,44 +50,22 @@ export default function DashboardContent() {
 
   const userName = user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Friend";
 
-  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !user) return;
-    if (file.size > 5 * 1024 * 1024) return;
-    setUploadingAvatar(true);
-    try {
-      const url = await uploadImage("avatars", user.id, file);
-      setAvatarUrl(url);
-      const supabase = createClient();
-      await supabase.auth.updateUser({ data: { avatar_url: url } });
-    } catch (err) {
-      console.error("Avatar upload failed:", err);
-    }
-    setUploadingAvatar(false);
-  };
-
   return (
     <>
       {/* Header */}
       <header className="mb-8 md:mb-12 flex items-center gap-6">
-        <div className="relative group">
-          <div
-            onClick={() => avatarInputRef.current?.click()}
-            className="w-20 h-20 md:w-24 md:h-24 rounded-full border-4 border-primary bg-surface-container flex items-center justify-center overflow-hidden cursor-pointer"
-          >
-            {uploadingAvatar ? (
-              <span className="material-symbols-outlined text-3xl text-primary animate-spin">progress_activity</span>
-            ) : avatarUrl ? (
+        <Link href="/profile" className="relative group shrink-0">
+          <div className="w-20 h-20 md:w-24 md:h-24 rounded-full border-4 border-primary bg-surface-container flex items-center justify-center overflow-hidden">
+            {avatarUrl ? (
               <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
             ) : (
               <span className="material-symbols-outlined text-4xl text-on-surface-variant/30">person</span>
             )}
           </div>
-          <div className="absolute bottom-0 right-0 w-7 h-7 rounded-full bg-primary flex items-center justify-center shadow-md cursor-pointer" onClick={() => avatarInputRef.current?.click()}>
-            <span className="material-symbols-outlined text-on-primary text-sm">photo_camera</span>
+          <div className="absolute bottom-0 right-0 w-7 h-7 rounded-full bg-primary flex items-center justify-center shadow-md">
+            <span className="material-symbols-outlined text-on-primary text-sm">edit</span>
           </div>
-          <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
-        </div>
+        </Link>
         <div>
           <h1 className="font-headline text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-tight text-on-surface mb-2">
             {t("dashboard.welcome")} {userName}!

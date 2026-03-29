@@ -129,6 +129,25 @@
     "orContinueWith": "Or continue with email",
     "continueWithGoogle": "Continue with Google"
   },
+  "profile": {
+    "title": "Edit Profile",
+    "subtitle": "Manage your account and preferences",
+    "profilePicture": "Profile Picture",
+    "changeAvatar": "Change Avatar",
+    "selectAvatar": "Select an avatar",
+    "removeAvatar": "Remove avatar",
+    "personalInfo": "Personal Information",
+    "fullName": "Display Name",
+    "fullNamePlaceholder": "Enter your name",
+    "phone": "Phone Number",
+    "accountInfo": "Account",
+    "googleAccount": "Google Account",
+    "connected": "Connected",
+    "notConnected": "Not connected",
+    "signInMethod": "Sign-in Method",
+    "emailPassword": "Email & Password",
+    "saved": "Profile updated!"
+  },
   "common": {
     "loading": "Loading...",
     "error": "Something went wrong",
