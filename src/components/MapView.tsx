@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import type { Place } from "@/lib/types";
 
-// Leaflet must be imported dynamically on client side
 let L: typeof import("leaflet") | null = null;
 
 const typeMarkerColors: Record<string, string> = {
@@ -20,6 +20,17 @@ const typeMarkerColors: Record<string, string> = {
   "Pet School": "#ff9800",
 };
 
+function getIconName(type: string) {
+  if (type === "Hotel" || type === "Pet Hotel") return "hotel";
+  if (type === "Cafe" || type === "Restaurant") return "restaurant";
+  if (type === "Hospital" || type === "Clinic") return "medical_services";
+  if (type === "Park") return "park";
+  if (type === "Pool") return "pool";
+  if (type === "Shopping Mall") return "shopping_bag";
+  if (type === "Pet School") return "school";
+  return "storefront";
+}
+
 export default function MapView({
   places,
   selectedPlace,
@@ -29,23 +40,22 @@ export default function MapView({
   selectedPlace?: string;
   onSelectPlace?: (id: string) => void;
 }) {
-  const [mapReady, setMapReady] = useState(false);
+  const mapRef = useRef<any>(null);
+  const markersRef = useRef<any[]>([]);
+  const [leafletReady, setLeafletReady] = useState(false);
+  const [clickedPlace, setClickedPlace] = useState<Place | null>(null);
 
+  // Load Leaflet once
   useEffect(() => {
     if (typeof window === "undefined") return;
-
     import("leaflet").then((leaflet) => {
       L = leaflet;
-
-      // Fix default marker icons
       delete (L.Icon.Default.prototype as any)._getIconUrl;
       L.Icon.Default.mergeOptions({
         iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png",
         iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png",
         shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
       });
-
-      // Add leaflet CSS
       if (!document.getElementById("leaflet-css")) {
         const link = document.createElement("link");
         link.id = "leaflet-css";
@@ -53,73 +63,190 @@ export default function MapView({
         link.href = "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css";
         document.head.appendChild(link);
       }
-
-      setMapReady(true);
+      setLeafletReady(true);
     });
   }, []);
 
+  // Initialize map once
   useEffect(() => {
-    if (!mapReady || !L) return;
-
+    if (!leafletReady || !L) return;
     const container = document.getElementById("map-container");
-    if (!container) return;
+    if (!container || mapRef.current) return;
 
-    // Clear existing map
-    container.innerHTML = "";
-
-    const map = L.map(container).setView([13.7563, 100.5018], 6);
-
+    mapRef.current = L.map(container).setView([13.7563, 100.5018], 6);
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
       maxZoom: 19,
-    }).addTo(map);
+    }).addTo(mapRef.current);
+
+    return () => {
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
+      }
+    };
+  }, [leafletReady]);
+
+  // Update markers when places change (but don't recreate the map)
+  useEffect(() => {
+    if (!mapRef.current || !L) return;
+
+    // Remove old markers
+    markersRef.current.forEach((m) => m.remove());
+    markersRef.current = [];
 
     places.forEach((place) => {
       const firstType = place.place_type.split(",")[0].trim();
       const color = typeMarkerColors[firstType] || "#897266";
-      const iconName = firstType === "Hotel" || firstType === "Pet Hotel" ? "hotel" :
-        firstType === "Cafe" || firstType === "Restaurant" ? "restaurant" :
-        firstType === "Hospital" || firstType === "Clinic" ? "medical_services" :
-        firstType === "Park" ? "park" : firstType === "Pool" ? "pool" :
-        firstType === "Shopping Mall" ? "shopping_bag" : firstType === "Pet School" ? "school" : "storefront";
+      const iconName = getIconName(firstType);
+      const isSelected = selectedPlace === place.id;
 
       const icon = L!.divIcon({
         className: "custom-marker",
-        html: `<div style="background:${color};width:32px;height:32px;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;cursor:pointer;transform:${selectedPlace === place.id ? 'scale(1.3)' : 'scale(1)'};transition:transform 0.2s;">
-          <span class="material-symbols-outlined" style="color:white;font-size:16px;font-variation-settings:'FILL' 1;">${iconName}</span>
+        html: `<div style="background:${color};width:${isSelected ? 40 : 32}px;height:${isSelected ? 40 : 32}px;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s;">
+          <span class="material-symbols-outlined" style="color:white;font-size:${isSelected ? 20 : 16}px;font-variation-settings:'FILL' 1;">${iconName}</span>
         </div>`,
-        iconSize: [32, 32],
-        iconAnchor: [16, 16],
+        iconSize: [isSelected ? 40 : 32, isSelected ? 40 : 32],
+        iconAnchor: [isSelected ? 20 : 16, isSelected ? 20 : 16],
       });
 
-      const marker = L!.marker([place.latitude, place.longitude], { icon }).addTo(map);
-
-      marker.bindPopup(`
-        <div style="font-family:'Plus Jakarta Sans',sans-serif;min-width:180px;">
-          <h3 style="font-weight:700;font-size:14px;margin:0 0 4px;">${place.name}</h3>
-          <p style="color:#564338;font-size:12px;margin:0 0 4px;">${place.province}</p>
-          <span style="background:${color};color:white;font-size:10px;padding:2px 8px;border-radius:12px;font-weight:700;">${place.place_type.split(",").join(", ")}</span>
-          ${place.google_maps_url ? `<br/><a href="${place.google_maps_url}" target="_blank" rel="noopener" style="color:#0060ac;font-size:11px;display:inline-block;margin-top:6px;">Open in Google Maps &rarr;</a>` : ''}
-        </div>
-      `);
+      const marker = L!.marker([place.latitude, place.longitude], { icon }).addTo(mapRef.current);
 
       marker.on("click", () => {
+        setClickedPlace(place);
         if (onSelectPlace) onSelectPlace(place.id);
       });
+
+      markersRef.current.push(marker);
     });
 
-    // Fit bounds if places exist
+    // Fit bounds only when places list changes (not on selection)
     if (places.length > 0) {
       const bounds = L.latLngBounds(places.map((p) => [p.latitude, p.longitude]));
-      map.fitBounds(bounds, { padding: [50, 50], maxZoom: 12 });
+      mapRef.current.fitBounds(bounds, { padding: [50, 50], maxZoom: 12 });
     }
+  }, [leafletReady, places]);
 
-    return () => {
-      map.remove();
-    };
-  }, [mapReady, places, selectedPlace]);
+  // Update marker styles when selectedPlace changes (without recreating)
+  useEffect(() => {
+    if (!mapRef.current || !L || markersRef.current.length === 0) return;
+
+    markersRef.current.forEach((marker, i) => {
+      const place = places[i];
+      if (!place) return;
+      const firstType = place.place_type.split(",")[0].trim();
+      const color = typeMarkerColors[firstType] || "#897266";
+      const iconName = getIconName(firstType);
+      const isSelected = selectedPlace === place.id;
+
+      const icon = L!.divIcon({
+        className: "custom-marker",
+        html: `<div style="background:${color};width:${isSelected ? 40 : 32}px;height:${isSelected ? 40 : 32}px;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,${isSelected ? '0.5' : '0.3'});display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s;">
+          <span class="material-symbols-outlined" style="color:white;font-size:${isSelected ? 20 : 16}px;font-variation-settings:'FILL' 1;">${iconName}</span>
+        </div>`,
+        iconSize: [isSelected ? 40 : 32, isSelected ? 40 : 32],
+        iconAnchor: [isSelected ? 20 : 16, isSelected ? 20 : 16],
+      });
+
+      marker.setIcon(icon);
+    });
+  }, [selectedPlace, places]);
+
+  // Close detail card when clicking outside
+  const handleMapClick = () => {
+    setClickedPlace(null);
+  };
+
+  const types = clickedPlace ? clickedPlace.place_type.split(",").map((t) => t.trim()) : [];
 
   return (
-    <div id="map-container" className="w-full h-full" style={{ minHeight: "400px" }} />
+    <div className="relative w-full h-full">
+      <div id="map-container" className="w-full h-full" style={{ minHeight: "400px" }} onClick={handleMapClick} />
+
+      {/* Place detail card overlay */}
+      {clickedPlace && (
+        <div
+          className="absolute bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-96 bg-white rounded-2xl shadow-2xl border border-outline-variant/10 overflow-hidden z-[1000]"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Cover image */}
+          {clickedPlace.cover_image && (
+            <div className="w-full h-32 overflow-hidden">
+              <img src={clickedPlace.cover_image} alt={clickedPlace.name} className="w-full h-full object-cover" />
+            </div>
+          )}
+
+          <div className="p-4 space-y-3">
+            {/* Type badges */}
+            <div className="flex flex-wrap gap-1">
+              {types.map((tp) => {
+                const color = typeMarkerColors[tp] || "#897266";
+                return (
+                  <span key={tp} style={{ background: color }} className="text-white text-[10px] px-2 py-0.5 rounded-full font-bold">
+                    {tp.toUpperCase()}
+                  </span>
+                );
+              })}
+            </div>
+
+            {/* Name & province */}
+            <div>
+              <h3 className="font-headline font-bold text-lg leading-tight">{clickedPlace.name}</h3>
+              <p className="text-sm text-on-surface-variant flex items-center gap-1 mt-0.5">
+                <span className="material-symbols-outlined text-xs">location_on</span>
+                {clickedPlace.province}
+              </p>
+            </div>
+
+            {/* Description */}
+            {clickedPlace.description && (
+              <p className="text-xs text-on-surface-variant line-clamp-2">{clickedPlace.description}</p>
+            )}
+
+            {/* Pet info chips */}
+            <div className="flex flex-wrap gap-2">
+              {clickedPlace.pet_friendly && (
+                <span className="inline-flex items-center gap-1 bg-secondary-container/50 text-on-secondary-container px-2 py-1 rounded-full text-[11px] font-medium">
+                  <span className="material-symbols-outlined text-xs">pets</span>
+                  {clickedPlace.pet_friendly}
+                </span>
+              )}
+              {clickedPlace.pet_fee && (
+                <span className="inline-flex items-center gap-1 bg-primary-container/30 text-on-primary-container px-2 py-1 rounded-full text-[11px] font-medium">
+                  <span className="material-symbols-outlined text-xs">payments</span>
+                  {clickedPlace.pet_fee}
+                </span>
+              )}
+            </div>
+
+            {/* Action buttons */}
+            <div className="flex gap-2 pt-1">
+              <Link
+                href={`/places/${clickedPlace.id}`}
+                className="flex-1 py-2 bg-primary text-on-primary rounded-full font-bold text-sm text-center hover:opacity-90 transition-colors"
+              >
+                View Details
+              </Link>
+              {clickedPlace.google_maps_url && (
+                <a
+                  href={clickedPlace.google_maps_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="py-2 px-4 border-2 border-primary text-primary rounded-full font-bold text-sm flex items-center gap-1 hover:bg-primary-container/20 transition-colors"
+                >
+                  <span className="material-symbols-outlined text-sm">directions</span>
+                </a>
+              )}
+              <button
+                onClick={() => setClickedPlace(null)}
+                className="w-9 h-9 rounded-full bg-surface-container-highest flex items-center justify-center hover:bg-surface-container transition-colors shrink-0"
+              >
+                <span className="material-symbols-outlined text-sm text-on-surface-variant">close</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
