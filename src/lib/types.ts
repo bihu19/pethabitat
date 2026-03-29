@@ -69,3 +69,25 @@ export interface MedicalRecord {
   status: "completed" | "upcoming" | "overdue";
   created_at: string;
 }
+
+export interface PlaceRequest {
+  id: string;
+  user_id: string;
+  status: "pending" | "approved" | "rejected";
+  name: string;
+  place_type: string;
+  province: string;
+  google_maps_url: string | null;
+  website_url: string | null;
+  description: string | null;
+  pet_fee: string | null;
+  pet_condition: string | null;
+  pet_friendly: string | null;
+  cover_image: string | null;
+  latitude: number;
+  longitude: number;
+  admin_note: string | null;
+  created_at: string;
+  user_email?: string;
+  user_name?: string;
+}

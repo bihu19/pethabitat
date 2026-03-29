@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import { useI18n } from "@/lib/i18n";
+import Link from "next/link";
 import PlaceCard from "@/components/PlaceCard";
 import MapView from "@/components/MapView";
 import type { Place } from "@/lib/types";
@@ -86,9 +87,18 @@ export default function ExploreContent({ initialPlaces }: { initialPlaces: Place
       {/* Sidebar */}
       <aside className="w-full md:w-[420px] bg-surface flex flex-col z-20 shadow-xl md:shadow-none border-r border-outline-variant/10">
         <div className="p-4 md:p-6 space-y-3">
-          <h1 className="text-xl md:text-2xl font-headline font-extrabold text-on-surface tracking-tight">
-            {t("explore.nearbySpots")}
-          </h1>
+          <div className="flex items-center justify-between">
+            <h1 className="text-xl md:text-2xl font-headline font-extrabold text-on-surface tracking-tight">
+              {t("explore.nearbySpots")}
+            </h1>
+            <Link
+              href="/places/request"
+              className="px-3 py-1.5 rounded-full bg-secondary-container text-on-secondary-container text-xs font-bold flex items-center gap-1 hover:opacity-90 transition-colors"
+            >
+              <span className="material-symbols-outlined text-xs">add_location_alt</span>
+              {t("request.requestPlace")}
+            </Link>
+          </div>
 
           {/* Search bar - always visible */}
           <div className="relative">
