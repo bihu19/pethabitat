@@ -195,7 +195,12 @@
     "yes": "มี",
     "no": "ไม่มี",
     "otherAmenities": "อื่น ๆ (ระบุ)",
-    "otherAmenitiesPlaceholder": "เช่น สระว่ายน้ำสัตว์เลี้ยง, บริการกรูมมิ่ง"
+    "otherAmenitiesPlaceholder": "เช่น สระว่ายน้ำสัตว์เลี้ยง, บริการกรูมมิ่ง",
+    "extractingCoords": "กำลังดึงพิกัด...",
+    "coordinates": "พิกัด",
+    "fromGoogleMaps": "จาก Google Maps",
+    "fromProvince": "จากจังหวัด (โดยประมาณ)",
+    "coordsHint": "พิกัดจะถูกดึงอัตโนมัติจากลิงก์ Google Maps หรือแก้ไขเองได้"
   },
   "categories": {
     "Hotel": "โรงแรมที่พักพาสัตว์เลี้ยงเข้าได้",

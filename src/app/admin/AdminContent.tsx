@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useI18n } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/client";
 import { provinces } from "@/lib/provinces";
+import { extractCoordsFromUrl } from "@/lib/extractCoords";
 import type { Place, PlaceType } from "@/lib/types";
 
 const allPlaceTypes: PlaceType[] = [
@@ -54,10 +55,62 @@ export default function AdminContent({ initialPlaces }: { initialPlaces: Place[]
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [extractingCoords, setExtractingCoords] = useState(false);
+  const [coordSource, setCoordSource] = useState<"" | "google" | "province">("");
+
+  const handleGoogleMapsUrlChange = async (url: string) => {
+    setForm((f) => ({ ...f, google_maps_url: url }));
+
+    if (!url) return;
+
+    // Try to extract from full URL first
+    const coords = extractCoordsFromUrl(url);
+    if (coords) {
+      setForm((f) => ({ ...f, google_maps_url: url, latitude: String(coords.lat), longitude: String(coords.lng) }));
+      setCoordSource("google");
+      return;
+    }
+
+    // For short URLs (maps.app.goo.gl, goo.gl/maps), resolve via API
+    if (url.includes("goo.gl") || url.includes("maps.app")) {
+      setExtractingCoords(true);
+      try {
+        const res = await fetch("/api/resolve-url", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url }),
+        });
+        const data = await res.json();
+        if (data.resolvedUrl) {
+          const resolved = extractCoordsFromUrl(data.resolvedUrl);
+          if (resolved) {
+            setForm((f) => ({ ...f, latitude: String(resolved.lat), longitude: String(resolved.lng) }));
+            setCoordSource("google");
+          }
+        }
+      } catch {
+        // Silently fail - user can still set province-based coords
+      }
+      setExtractingCoords(false);
+    }
+  };
+
+  const handleProvinceChange = (provinceTh: string) => {
+    const prov = provinces.find((p) => p.th === provinceTh);
+    const updates: any = { province: provinceTh };
+    // Only auto-fill coords from province if not already set from Google Maps
+    if (prov && coordSource !== "google") {
+      updates.latitude = String(prov.coords[0]);
+      updates.longitude = String(prov.coords[1]);
+      setCoordSource("province");
+    }
+    setForm((f) => ({ ...f, ...updates }));
+  };
 
   const openCreateForm = () => {
     setEditingId(null);
     setForm(emptyForm);
+    setCoordSource("");
     setShowForm(true);
     setMessage("");
   };
@@ -85,6 +138,7 @@ export default function AdminContent({ initialPlaces }: { initialPlaces: Place[]
       latitude: String(place.latitude),
       longitude: String(place.longitude),
     });
+    setCoordSource(place.google_maps_url ? "google" : "province");
     setShowForm(true);
     setMessage("");
   };
@@ -304,7 +358,7 @@ export default function AdminContent({ initialPlaces }: { initialPlaces: Place[]
                   <select
                     className="w-full h-12 px-4 bg-surface-container-highest border-none rounded-lg focus:ring-2 focus:ring-primary"
                     value={form.province}
-                    onChange={(e) => setForm({ ...form, province: e.target.value })}
+                    onChange={(e) => handleProvinceChange(e.target.value)}
                     required
                   >
                     <option value="">{t("explore.allProvinces")}</option>
@@ -327,12 +381,15 @@ export default function AdminContent({ initialPlaces }: { initialPlaces: Place[]
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="flex flex-col gap-1">
-                  <label className="text-sm font-bold text-on-surface-variant">{t("admin.googleMapsUrl")}</label>
+                  <label className="text-sm font-bold text-on-surface-variant">
+                    {t("admin.googleMapsUrl")}
+                    {extractingCoords && <span className="ml-2 text-xs text-primary font-normal">{t("admin.extractingCoords")}</span>}
+                  </label>
                   <input
                     className="w-full h-12 px-4 bg-surface-container-highest border-none rounded-lg focus:ring-2 focus:ring-primary text-sm"
                     placeholder="https://maps.app.goo.gl/..."
                     value={form.google_maps_url}
-                    onChange={(e) => setForm({ ...form, google_maps_url: e.target.value })}
+                    onChange={(e) => handleGoogleMapsUrlChange(e.target.value)}
                   />
                 </div>
                 <div className="flex flex-col gap-1">
@@ -422,15 +479,34 @@ export default function AdminContent({ initialPlaces }: { initialPlaces: Place[]
                 </div>
               )}
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="flex flex-col gap-1">
-                  <label className="text-sm font-bold text-on-surface-variant">{t("admin.latitude")}</label>
-                  <input type="number" step="any" className="w-full h-12 px-4 bg-surface-container-highest border-none rounded-lg focus:ring-2 focus:ring-primary text-sm" value={form.latitude} onChange={(e) => setForm({ ...form, latitude: e.target.value })} />
+              {/* Coordinates (auto-extracted) */}
+              <div className="bg-surface-container rounded-xl p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-bold text-on-surface-variant flex items-center gap-1.5">
+                    <span className="material-symbols-outlined text-sm">my_location</span>
+                    {t("admin.coordinates")}
+                  </label>
+                  {coordSource === "google" && (
+                    <span className="text-xs text-secondary font-medium flex items-center gap-1">
+                      <span className="material-symbols-outlined text-xs">check_circle</span>
+                      {t("admin.fromGoogleMaps")}
+                    </span>
+                  )}
+                  {coordSource === "province" && (
+                    <span className="text-xs text-on-surface-variant/60 font-medium">{t("admin.fromProvince")}</span>
+                  )}
                 </div>
-                <div className="flex flex-col gap-1">
-                  <label className="text-sm font-bold text-on-surface-variant">{t("admin.longitude")}</label>
-                  <input type="number" step="any" className="w-full h-12 px-4 bg-surface-container-highest border-none rounded-lg focus:ring-2 focus:ring-primary text-sm" value={form.longitude} onChange={(e) => setForm({ ...form, longitude: e.target.value })} />
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex items-center gap-2 h-10 px-3 bg-surface-container-highest rounded-lg text-sm">
+                    <span className="text-xs text-on-surface-variant/60">Lat</span>
+                    <input type="number" step="any" className="flex-1 bg-transparent border-none focus:outline-none text-sm font-medium" value={form.latitude} onChange={(e) => setForm({ ...form, latitude: e.target.value })} />
+                  </div>
+                  <div className="flex items-center gap-2 h-10 px-3 bg-surface-container-highest rounded-lg text-sm">
+                    <span className="text-xs text-on-surface-variant/60">Lng</span>
+                    <input type="number" step="any" className="flex-1 bg-transparent border-none focus:outline-none text-sm font-medium" value={form.longitude} onChange={(e) => setForm({ ...form, longitude: e.target.value })} />
+                  </div>
                 </div>
+                <p className="text-[11px] text-on-surface-variant/50">{t("admin.coordsHint")}</p>
               </div>
 
               <div className="flex justify-end gap-3 pt-4 border-t border-outline-variant/10">
