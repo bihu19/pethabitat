@@ -129,6 +129,25 @@
     "orContinueWith": "หรือดำเนินการด้วยอีเมล",
     "continueWithGoogle": "ดำเนินการด้วย Google"
   },
+  "profile": {
+    "title": "แก้ไขโปรไฟล์",
+    "subtitle": "จัดการบัญชีและการตั้งค่าของคุณ",
+    "profilePicture": "รูปโปรไฟล์",
+    "changeAvatar": "เปลี่ยนรูปประจำตัว",
+    "selectAvatar": "เลือกรูปประจำตัว",
+    "removeAvatar": "ลบรูปประจำตัว",
+    "personalInfo": "ข้อมูลส่วนตัว",
+    "fullName": "ชื่อที่แสดง",
+    "fullNamePlaceholder": "กรอกชื่อของคุณ",
+    "phone": "เบอร์โทรศัพท์",
+    "accountInfo": "บัญชี",
+    "googleAccount": "บัญชี Google",
+    "connected": "เชื่อมต่อแล้ว",
+    "notConnected": "ยังไม่ได้เชื่อมต่อ",
+    "signInMethod": "วิธีเข้าสู่ระบบ",
+    "emailPassword": "อีเมลและรหัสผ่าน",
+    "saved": "อัปเดตโปรไฟล์แล้ว!"
+  },
   "common": {
     "loading": "กำลังโหลด...",
     "error": "เกิดข้อผิดพลาด",
