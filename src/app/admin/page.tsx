@@ -10,6 +10,7 @@ export const dynamic = "force-dynamic";
 export default async function AdminPage() {
   let isAdmin = false;
   let places: any[] = [];
+  let requests: any[] = [];
 
   try {
     const supabase = await createClient();
@@ -27,6 +28,9 @@ export default async function AdminPage() {
 
     const { data } = await supabase.from("places").select("*").order("created_at", { ascending: false });
     places = data || [];
+
+    const { data: reqData } = await supabase.from("place_requests").select("*").order("created_at", { ascending: false });
+    requests = reqData || [];
   } catch {
     redirect("/login");
   }
@@ -35,7 +39,7 @@ export default async function AdminPage() {
     <Providers>
       <Navbar />
       <main className="pt-24 pb-20 px-4 md:px-6 lg:px-12 max-w-screen-2xl mx-auto">
-        <AdminContent initialPlaces={places} />
+        <AdminContent initialPlaces={places} initialRequests={requests} />
       </main>
       <BottomNav />
     </Providers>

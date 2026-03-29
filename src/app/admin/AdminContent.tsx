@@ -5,7 +5,7 @@ import { useI18n } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/client";
 import { provinces } from "@/lib/provinces";
 import { extractCoordsFromUrl } from "@/lib/extractCoords";
-import type { Place, PlaceType } from "@/lib/types";
+import type { Place, PlaceType, PlaceRequest } from "@/lib/types";
 
 const allPlaceTypes: PlaceType[] = [
   "Hotel", "Pet Hotel", "Cafe", "Restaurant", "Hospital", "Clinic",
@@ -46,9 +46,11 @@ function parseTypes(placeType: string): string[] {
   return placeType.split(",").map((t) => t.trim()).filter(Boolean);
 }
 
-export default function AdminContent({ initialPlaces }: { initialPlaces: Place[] }) {
+export default function AdminContent({ initialPlaces, initialRequests = [] }: { initialPlaces: Place[]; initialRequests?: PlaceRequest[] }) {
   const { t, locale } = useI18n();
+  const [activeTab, setActiveTab] = useState<"places" | "requests">("places");
   const [places, setPlaces] = useState<Place[]>(initialPlaces);
+  const [requests, setRequests] = useState<PlaceRequest[]>(initialRequests);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
@@ -234,6 +236,60 @@ export default function AdminContent({ initialPlaces }: { initialPlaces: Place[]
     }
   };
 
+  const handleApproveRequest = async (req: PlaceRequest) => {
+    try {
+      const supabase = createClient();
+
+      // Insert into places table
+      const { error: insertErr } = await supabase.from("places").insert({
+        name: req.name,
+        place_type: req.place_type,
+        province: req.province,
+        description: req.description,
+        google_maps_url: req.google_maps_url,
+        website_url: req.website_url,
+        pet_fee: req.pet_fee,
+        pet_condition: req.pet_condition,
+        pet_friendly: req.pet_friendly,
+        cover_image: req.cover_image,
+        latitude: req.latitude,
+        longitude: req.longitude,
+      });
+      if (insertErr) throw insertErr;
+
+      // Update request status
+      const { error: updateErr } = await supabase
+        .from("place_requests")
+        .update({ status: "approved" })
+        .eq("id", req.id);
+      if (updateErr) throw updateErr;
+
+      setRequests((prev) => prev.map((r) => r.id === req.id ? { ...r, status: "approved" as const } : r));
+      setMessage(t("request.approvedSuccess"));
+    } catch (err: any) {
+      setMessage(err.message || "Error approving request");
+    }
+  };
+
+  const handleRejectRequest = async (req: PlaceRequest, note: string) => {
+    try {
+      const supabase = createClient();
+      const { error } = await supabase
+        .from("place_requests")
+        .update({ status: "rejected", admin_note: note || null })
+        .eq("id", req.id);
+      if (error) throw error;
+
+      setRequests((prev) => prev.map((r) => r.id === req.id ? { ...r, status: "rejected" as const, admin_note: note || null } : r));
+      setMessage(t("request.rejectedSuccess"));
+    } catch (err: any) {
+      setMessage(err.message || "Error rejecting request");
+    }
+  };
+
+  const pendingRequests = requests.filter((r) => r.status === "pending");
+  const processedRequests = requests.filter((r) => r.status !== "pending");
+
   const filteredPlaces = searchQuery
     ? places.filter(
         (p) =>
@@ -266,6 +322,34 @@ export default function AdminContent({ initialPlaces }: { initialPlaces: Place[]
         </div>
       )}
 
+      {/* Tabs */}
+      <div className="flex gap-2 mb-6">
+        <button
+          onClick={() => setActiveTab("places")}
+          className={`px-5 py-2.5 rounded-full font-bold text-sm flex items-center gap-2 transition-colors ${
+            activeTab === "places" ? "bg-primary text-on-primary" : "bg-surface-container-highest text-on-surface-variant hover:bg-surface-container"
+          }`}
+        >
+          <span className="material-symbols-outlined text-sm">store</span>
+          {t("admin.managePlaces")}
+        </button>
+        <button
+          onClick={() => setActiveTab("requests")}
+          className={`px-5 py-2.5 rounded-full font-bold text-sm flex items-center gap-2 transition-colors ${
+            activeTab === "requests" ? "bg-primary text-on-primary" : "bg-surface-container-highest text-on-surface-variant hover:bg-surface-container"
+          }`}
+        >
+          <span className="material-symbols-outlined text-sm">rate_review</span>
+          {t("admin.reviewRequests")}
+          {pendingRequests.length > 0 && (
+            <span className="w-5 h-5 rounded-full bg-error text-white text-xs font-bold flex items-center justify-center">
+              {pendingRequests.length}
+            </span>
+          )}
+        </button>
+      </div>
+
+      {activeTab === "places" && (<>
       {/* Toolbar */}
       <div className="flex flex-col sm:flex-row gap-3 mb-6">
         <div className="relative flex-1">
@@ -570,6 +654,173 @@ export default function AdminContent({ initialPlaces }: { initialPlaces: Place[]
           </div>
         )}
       </div>
+      </>)}
+
+      {/* Requests Tab */}
+      {activeTab === "requests" && (
+        <div className="space-y-8">
+          {/* Pending Requests */}
+          <div>
+            <h2 className="font-headline font-bold text-xl mb-4 flex items-center gap-2">
+              <span className="material-symbols-outlined text-primary">pending_actions</span>
+              {t("request.pendingReview")}
+              {pendingRequests.length > 0 && (
+                <span className="w-6 h-6 rounded-full bg-error text-white text-xs font-bold flex items-center justify-center">{pendingRequests.length}</span>
+              )}
+            </h2>
+            <div className="space-y-4">
+              {pendingRequests.map((req) => (
+                <RequestCard key={req.id} req={req} locale={locale} t={t} onApprove={handleApproveRequest} onReject={handleRejectRequest} />
+              ))}
+              {pendingRequests.length === 0 && (
+                <div className="text-center py-12 text-on-surface-variant">
+                  <span className="material-symbols-outlined text-4xl text-on-surface-variant/20 mb-2">task_alt</span>
+                  <p>{t("request.noPending")}</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Processed Requests */}
+          {processedRequests.length > 0 && (
+            <div>
+              <h2 className="font-headline font-bold text-xl mb-4 flex items-center gap-2">
+                <span className="material-symbols-outlined text-on-surface-variant">history</span>
+                {t("request.processedRequests")}
+              </h2>
+              <div className="space-y-3">
+                {processedRequests.map((req) => {
+                  const isApproved = req.status === "approved";
+                  return (
+                    <div key={req.id} className="bg-surface-container-low rounded-xl p-4 border border-outline-variant/10 opacity-75">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-bold text-sm">{req.name}</h3>
+                          <p className="text-xs text-on-surface-variant">{req.province} &bull; {req.place_type.split(",").join(", ")}</p>
+                        </div>
+                        <span className={`${isApproved ? "bg-secondary-container text-on-secondary-container" : "bg-error-container text-on-error-container"} px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1`}>
+                          <span className="material-symbols-outlined text-xs">{isApproved ? "check_circle" : "cancel"}</span>
+                          {isApproved ? t("request.approved") : t("request.rejected")}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </>
+  );
+}
+
+// Request review card component
+function RequestCard({ req, locale, t, onApprove, onReject }: {
+  req: PlaceRequest;
+  locale: string;
+  t: (key: string) => string;
+  onApprove: (req: PlaceRequest) => void;
+  onReject: (req: PlaceRequest, note: string) => void;
+}) {
+  const [showReject, setShowReject] = useState(false);
+  const [rejectNote, setRejectNote] = useState("");
+  const types = req.place_type.split(",").map((t) => t.trim());
+
+  return (
+    <div className="bg-surface-container-low rounded-xl p-5 md:p-6 border border-outline-variant/15 space-y-4">
+      {/* Header */}
+      <div className="flex items-start gap-4">
+        {req.cover_image && (
+          <div className="w-20 h-20 rounded-lg overflow-hidden shrink-0 bg-surface-container">
+            <img src={req.cover_image} alt={req.name} className="w-full h-full object-cover" />
+          </div>
+        )}
+        <div className="flex-1 min-w-0">
+          <h3 className="font-headline font-bold text-lg">{req.name}</h3>
+          <p className="text-sm text-on-surface-variant flex items-center gap-1">
+            <span className="material-symbols-outlined text-xs">location_on</span>
+            {req.province}
+          </p>
+          <div className="flex flex-wrap gap-1 mt-2">
+            {types.map((tp) => (
+              <span key={tp} className="px-2 py-0.5 rounded-full bg-surface-container-highest text-xs font-medium text-on-surface-variant">{tp}</span>
+            ))}
+          </div>
+        </div>
+        <span className="bg-primary-container text-on-primary-container px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 shrink-0">
+          <span className="material-symbols-outlined text-xs">schedule</span>
+          {t("request.pending")}
+        </span>
+      </div>
+
+      {/* Details */}
+      {req.description && <p className="text-sm text-on-surface-variant">{req.description}</p>}
+
+      <div className="flex flex-wrap gap-3 text-xs text-on-surface-variant">
+        {req.pet_friendly && (
+          <span className="flex items-center gap-1"><span className="material-symbols-outlined text-xs">pets</span>{req.pet_friendly}</span>
+        )}
+        {req.pet_fee && (
+          <span className="flex items-center gap-1"><span className="material-symbols-outlined text-xs">payments</span>{req.pet_fee}</span>
+        )}
+        {req.google_maps_url && (
+          <a href={req.google_maps_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-primary hover:underline">
+            <span className="material-symbols-outlined text-xs">map</span>Google Maps
+          </a>
+        )}
+        {req.website_url && (
+          <a href={req.website_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-primary hover:underline">
+            <span className="material-symbols-outlined text-xs">language</span>Website
+          </a>
+        )}
+      </div>
+
+      <p className="text-xs text-on-surface-variant/50">
+        {t("request.submittedOn")} {new Date(req.created_at).toLocaleDateString()}
+      </p>
+
+      {/* Reject note input */}
+      {showReject && (
+        <div className="p-4 bg-surface-container rounded-lg space-y-3">
+          <label className="text-sm font-bold text-on-surface-variant">{t("request.rejectReason")}</label>
+          <textarea
+            className="w-full p-3 bg-surface-container-highest border-none rounded-lg text-sm focus:ring-2 focus:ring-error resize-none"
+            rows={2}
+            placeholder={t("request.rejectReasonPlaceholder")}
+            value={rejectNote}
+            onChange={(e) => setRejectNote(e.target.value)}
+          />
+          <div className="flex gap-2">
+            <button onClick={() => { onReject(req, rejectNote); setShowReject(false); }} className="px-5 py-2 rounded-full bg-error text-white font-bold text-sm">
+              {t("request.confirmReject")}
+            </button>
+            <button onClick={() => setShowReject(false)} className="px-5 py-2 rounded-full font-bold text-sm text-on-surface-variant hover:bg-surface-container-highest">
+              {t("pet.cancel")}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Action buttons */}
+      {!showReject && (
+        <div className="flex gap-3 pt-2 border-t border-outline-variant/10">
+          <button
+            onClick={() => onApprove(req)}
+            className="flex-1 py-2.5 rounded-full bg-secondary text-white font-bold text-sm flex items-center justify-center gap-1.5 hover:opacity-90 transition-colors"
+          >
+            <span className="material-symbols-outlined text-sm">check</span>
+            {t("request.approve")}
+          </button>
+          <button
+            onClick={() => setShowReject(true)}
+            className="flex-1 py-2.5 rounded-full border-2 border-error text-error font-bold text-sm flex items-center justify-center gap-1.5 hover:bg-error-container transition-colors"
+          >
+            <span className="material-symbols-outlined text-sm">close</span>
+            {t("request.reject")}
+          </button>
+        </div>
+      )}
+    </div>
   );
 }
