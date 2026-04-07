@@ -5,14 +5,17 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/client";
-import type { Pet } from "@/lib/types";
+import type { Pet, Place } from "@/lib/types";
 import type { User } from "@supabase/supabase-js";
+import PlaceCard from "@/components/PlaceCard";
 
 export default function DashboardContent() {
   const { t } = useI18n();
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [pets, setPets] = useState<Pet[]>([]);
+  const [savedPlaces, setSavedPlaces] = useState<Place[]>([]);
+  const [savedPlaceIds, setSavedPlaceIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   useEffect(() => {
@@ -32,6 +35,21 @@ export default function DashboardContent() {
         .eq("user_id", user.id)
         .order("created_at");
       setPets(petsData || []);
+
+      const { data: savedData } = await supabase
+        .from("saved_places")
+        .select("place_id, places(*)")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(6);
+      if (savedData) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const places = savedData
+          .map((s: any) => s.places as Place | null)
+          .filter((p): p is Place => p !== null);
+        setSavedPlaces(places);
+        setSavedPlaceIds(new Set(places.map((p) => p.id)));
+      }
       setLoading(false);
     }
     load();
@@ -148,19 +166,27 @@ export default function DashboardContent() {
 
         {/* Main content */}
         <section className="md:col-span-8 flex flex-col gap-6">
-          {/* Saved spots placeholder */}
+          {/* Saved spots */}
           <div className="bg-surface-container-low p-6 md:p-8 rounded-xl">
             <div className="flex justify-between items-center mb-6">
               <h2 className="font-headline text-xl md:text-2xl font-bold">{t("dashboard.savedSpots")}</h2>
               <Link href="/explore" className="text-primary font-semibold text-sm hover:underline">{t("common.viewAll")}</Link>
             </div>
-            <div className="flex flex-col items-center gap-3 py-8 text-on-surface-variant">
-              <span className="material-symbols-outlined text-4xl text-on-surface-variant/20">bookmark</span>
-              <p>Start exploring to save your favorite spots!</p>
-              <Link href="/explore" className="bg-primary text-on-primary px-6 py-2 rounded-full font-bold text-sm mt-2">
-                {t("nav.explore")}
-              </Link>
-            </div>
+            {savedPlaces.length > 0 ? (
+              <div className="space-y-2">
+                {savedPlaces.map((place) => (
+                  <PlaceCard key={place.id} place={place} savedPlaceIds={savedPlaceIds} />
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center gap-3 py-8 text-on-surface-variant">
+                <span className="material-symbols-outlined text-4xl text-on-surface-variant/20">bookmark</span>
+                <p>{t("dashboard.savedSpotsEmpty")}</p>
+                <Link href="/explore" className="bg-primary text-on-primary px-6 py-2 rounded-full font-bold text-sm mt-2">
+                  {t("nav.explore")}
+                </Link>
+              </div>
+            )}
           </div>
 
           {/* Quick actions */}

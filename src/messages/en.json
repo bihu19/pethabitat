@@ -53,7 +53,10 @@
     "writeReview": "Write a review",
     "noReviews": "No reviews yet. Be the first!",
     "petFriendly": "Pet Friendly",
-    "petAmenities": "Pet Amenities"
+    "petAmenities": "Pet Amenities",
+    "save": "Save Place",
+    "unsave": "Saved",
+    "loginToSave": "Please login to save places"
   },
   "dashboard": {
     "welcome": "Welcome back!",
@@ -63,6 +66,7 @@
     "healthPassportDesc": "View digital records and vaccination schedules for all your pets.",
     "accessRecords": "Access Records",
     "savedSpots": "My Saved Spots",
+    "savedSpotsEmpty": "Start exploring to save your favorite spots!",
     "upcomingActivities": "Upcoming Activities",
     "subtitle": "Your pet companion dashboard."
   },

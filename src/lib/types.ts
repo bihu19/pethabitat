@@ -70,6 +70,13 @@ export interface MedicalRecord {
   created_at: string;
 }
 
+export interface SavedPlace {
+  id: string;
+  user_id: string;
+  place_id: string;
+  created_at: string;
+}
+
 export interface PlaceRequest {
   id: string;
   user_id: string;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { useI18n } from "@/lib/i18n";
 import Link from "next/link";
@@ -9,6 +9,7 @@ import MapView from "@/components/MapView";
 import type { Place } from "@/lib/types";
 import { samplePlaces } from "@/lib/sampleData";
 import { provinces as allProvinces } from "@/lib/provinces";
+import { createClient } from "@/lib/supabase/client";
 
 const filterTypes = [
   { key: "all", icon: "all_inclusive", labelEn: "All", labelTh: "ทั้งหมด" },
@@ -39,7 +40,22 @@ export default function ExploreContent({ initialPlaces }: { initialPlaces: Place
   const [selectedProvince, setSelectedProvince] = useState("all");
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [petFriendlyOnly, setPetFriendlyOnly] = useState(false);
+  const [savedPlaceIds, setSavedPlaceIds] = useState<Set<string>>(new Set());
   const { t, locale } = useI18n();
+
+  useEffect(() => {
+    async function loadSaved() {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data } = await supabase
+        .from("saved_places")
+        .select("place_id")
+        .eq("user_id", user.id);
+      if (data) setSavedPlaceIds(new Set(data.map((s: { place_id: string }) => s.place_id)));
+    }
+    loadSaved();
+  }, []);
 
   // Use sample data if no real data
   const places = initialPlaces.length > 0 ? initialPlaces : samplePlaces;
@@ -205,7 +221,7 @@ export default function ExploreContent({ initialPlaces }: { initialPlaces: Place
               onClick={() => setSelectedPlace(place.id)}
               className={selectedPlace === place.id ? "ring-2 ring-primary rounded-lg" : ""}
             >
-              <PlaceCard place={place} />
+              <PlaceCard place={place} savedPlaceIds={savedPlaceIds} />
             </div>
           ))}
           {filteredPlaces.length === 0 && (
