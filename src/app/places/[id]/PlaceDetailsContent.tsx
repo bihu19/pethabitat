@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useI18n } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/client";
 import type { Place, Review } from "@/lib/types";
@@ -22,6 +22,54 @@ export default function PlaceDetailsContent({ place, reviews: initialReviews }: 
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [savingPlace, setSavingPlace] = useState(false);
+
+  useEffect(() => {
+    async function checkSaved() {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data } = await supabase
+        .from("saved_places")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("place_id", place.id)
+        .maybeSingle();
+      if (data) setSaved(true);
+    }
+    checkSaved();
+  }, [place.id]);
+
+  const handleToggleSave = async () => {
+    setSavingPlace(true);
+    try {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        alert(t("place.loginToSave"));
+        window.location.href = "/login";
+        return;
+      }
+      if (saved) {
+        await supabase
+          .from("saved_places")
+          .delete()
+          .eq("user_id", user.id)
+          .eq("place_id", place.id);
+        setSaved(false);
+      } else {
+        await supabase
+          .from("saved_places")
+          .insert({ user_id: user.id, place_id: place.id });
+        setSaved(true);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSavingPlace(false);
+    }
+  };
 
   const avgRating = reviews.length > 0
     ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
@@ -288,6 +336,23 @@ export default function PlaceDetailsContent({ place, reviews: initialReviews }: 
                     {t("place.visitWebsite")}
                   </a>
                 )}
+                <button
+                  onClick={handleToggleSave}
+                  disabled={savingPlace}
+                  className={`w-full py-3 md:py-4 rounded-full font-bold transition-colors flex items-center justify-center gap-2 ${
+                    saved
+                      ? "bg-primary-container text-on-primary-container"
+                      : "border-2 border-outline-variant text-on-surface-variant hover:border-primary hover:text-primary"
+                  }`}
+                >
+                  <span
+                    className="material-symbols-outlined"
+                    style={{ fontVariationSettings: saved ? "'FILL' 1" : "'FILL' 0" }}
+                  >
+                    bookmark
+                  </span>
+                  {saved ? t("place.unsave") : t("place.save")}
+                </button>
               </div>
             </div>
           </div>

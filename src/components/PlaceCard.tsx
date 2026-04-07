@@ -1,6 +1,8 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { createClient } from "@/lib/supabase/client";
 import type { Place } from "@/lib/types";
 
 const typeColors: Record<string, { bg: string; text: string }> = {
@@ -27,11 +29,32 @@ function parseTypes(placeType: string): string[] {
   return placeType.split(",").map((t) => t.trim()).filter(Boolean);
 }
 
-export default function PlaceCard({ place }: { place: Place }) {
+export default function PlaceCard({ place, savedPlaceIds }: { place: Place; savedPlaceIds?: Set<string> }) {
   const types = parseTypes(place.place_type);
   const firstType = types[0] || "Pet Supplier";
   const colors = typeColors[firstType] || typeColors["Pet Supplier"];
   const icon = typeIcons[firstType] || "place";
+
+  const [saved, setSaved] = useState(savedPlaceIds?.has(place.id) ?? false);
+
+  useEffect(() => {
+    if (savedPlaceIds) setSaved(savedPlaceIds.has(place.id));
+  }, [savedPlaceIds, place.id]);
+
+  const handleToggleSave = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    if (saved) {
+      await supabase.from("saved_places").delete().eq("user_id", user.id).eq("place_id", place.id);
+      setSaved(false);
+    } else {
+      await supabase.from("saved_places").insert({ user_id: user.id, place_id: place.id });
+      setSaved(true);
+    }
+  };
 
   return (
     <Link href={`/places/${place.id}`}>
@@ -49,6 +72,18 @@ export default function PlaceCard({ place }: { place: Place }) {
           <div className="flex-1 min-w-0">
             <div className="flex justify-between items-start gap-2">
               <h3 className="font-headline font-bold text-on-surface truncate">{place.name}</h3>
+              <button
+                onClick={handleToggleSave}
+                className="flex-shrink-0 p-1 rounded-full hover:bg-surface-container-highest transition-colors"
+                aria-label={saved ? "Unsave" : "Save"}
+              >
+                <span
+                  className={`material-symbols-outlined text-xl ${saved ? "text-primary" : "text-on-surface-variant/40"}`}
+                  style={{ fontVariationSettings: saved ? "'FILL' 1" : "'FILL' 0" }}
+                >
+                  bookmark
+                </span>
+              </button>
             </div>
             <div className="flex flex-wrap gap-1 mt-1">
               {types.map((t) => {
