@@ -15,29 +15,19 @@ export default function PetFormContent() {
   const [error, setError] = useState("");
   const [checking, setChecking] = useState(true);
 
-  // Check if user already has 3 pets (limit)
+  // Check auth on mount
   useEffect(() => {
-    async function checkPetLimit() {
+    async function checkAuth() {
       try {
         const supabase = createClient();
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) { router.push("/login"); return; }
-
-        const { count } = await supabase
-          .from("pets")
-          .select("*", { count: "exact", head: true })
-          .eq("user_id", user.id);
-
-        if (count && count >= 3) {
-          router.push("/dashboard");
-          return;
-        }
       } catch {
         // continue to form
       }
       setChecking(false);
     }
-    checkPetLimit();
+    checkAuth();
   }, [router]);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);

@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useI18n } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/client";
 import { provinces } from "@/lib/provinces";
 import { extractCoordsFromUrl } from "@/lib/extractCoords";
+import { uploadImage } from "@/lib/uploadImage";
 import type { PlaceType, PlaceRequest } from "@/lib/types";
 
 const allPlaceTypes: PlaceType[] = [
@@ -29,6 +30,9 @@ export default function RequestPlaceContent() {
   const [myRequests, setMyRequests] = useState<PlaceRequest[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [extractingCoords, setExtractingCoords] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [form, setForm] = useState({
     name: "",
@@ -40,7 +44,6 @@ export default function RequestPlaceContent() {
     pet_fee: "",
     pet_condition: "",
     pet_friendly: "",
-    cover_image: "",
     latitude: "13.7563",
     longitude: "100.5018",
   });
@@ -109,6 +112,17 @@ export default function RequestPlaceContent() {
     }));
   };
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      setError(t("pet.photoTooLarge"));
+      return;
+    }
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (form.place_types.length === 0) {
@@ -122,6 +136,17 @@ export default function RequestPlaceContent() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { router.push("/login"); return; }
 
+      let cover_image: string | null = null;
+      if (imageFile) {
+        try {
+          cover_image = await uploadImage("place-images", user.id, imageFile);
+        } catch (uploadErr: any) {
+          setError(uploadErr.message || "Failed to upload image.");
+          setLoading(false);
+          return;
+        }
+      }
+
       const { error } = await supabase.from("place_requests").insert({
         user_id: user.id,
         name: form.name,
@@ -133,7 +158,7 @@ export default function RequestPlaceContent() {
         pet_fee: form.pet_fee || null,
         pet_condition: form.pet_condition || null,
         pet_friendly: form.pet_friendly || null,
-        cover_image: form.cover_image || null,
+        cover_image,
         latitude: parseFloat(form.latitude) || 13.7563,
         longitude: parseFloat(form.longitude) || 100.5018,
       });
@@ -141,9 +166,11 @@ export default function RequestPlaceContent() {
 
       setSuccess(true);
       setShowForm(false);
+      setImageFile(null);
+      setImagePreview(null);
       setForm({
         name: "", place_types: [], province: "", description: "", google_maps_url: "",
-        website_url: "", pet_fee: "", pet_condition: "", pet_friendly: "", cover_image: "",
+        website_url: "", pet_fee: "", pet_condition: "", pet_friendly: "",
         latitude: "13.7563", longitude: "100.5018",
       });
       setTimeout(() => setSuccess(false), 3000);
@@ -262,10 +289,41 @@ export default function RequestPlaceContent() {
             <input className="w-full h-12 px-4 bg-surface-container-highest border-none rounded-lg focus:ring-2 focus:ring-primary text-sm" placeholder="https://..." value={form.website_url} onChange={(e) => setForm({ ...form, website_url: e.target.value })} />
           </div>
 
-          {/* Cover Image URL */}
+          {/* Cover Image Upload */}
           <div className="flex flex-col gap-1">
             <label className="text-sm font-bold text-on-surface-variant">{t("admin.coverImage")}</label>
-            <input className="w-full h-12 px-4 bg-surface-container-highest border-none rounded-lg focus:ring-2 focus:ring-primary text-sm" placeholder={t("admin.imageUrlPlaceholder")} value={form.cover_image} onChange={(e) => setForm({ ...form, cover_image: e.target.value })} />
+            <div className="flex items-center gap-4">
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                className="w-24 h-24 rounded-lg border-2 border-dashed border-outline-variant/30 hover:border-primary/50 flex items-center justify-center cursor-pointer overflow-hidden bg-surface-container transition-colors"
+              >
+                {imagePreview ? (
+                  <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="flex flex-col items-center gap-1 text-on-surface-variant/40">
+                    <span className="material-symbols-outlined text-2xl">add_photo_alternate</span>
+                    <span className="text-[10px] font-medium">{t("pet.addPhoto")}</span>
+                  </div>
+                )}
+              </div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleImageChange}
+              />
+              {imagePreview && (
+                <button
+                  type="button"
+                  onClick={() => { setImageFile(null); setImagePreview(null); }}
+                  className="text-xs text-error hover:underline"
+                >
+                  {t("pet.removePhoto")}
+                </button>
+              )}
+            </div>
+            <p className="text-xs text-on-surface-variant mt-1">{t("pet.photoHint")}</p>
           </div>
 
           {/* Pet info */}
