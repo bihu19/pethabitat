@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/client";
 
 export async function uploadImage(
-  bucket: "avatars" | "pet-photos",
+  bucket: "avatars" | "pet-photos" | "place-images",
   userId: string,
   file: File
 ): Promise<string> {

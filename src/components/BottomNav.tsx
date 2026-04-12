@@ -1,18 +1,30 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useI18n } from "@/lib/i18n";
+import { createClient } from "@/lib/supabase/client";
 
 export default function BottomNav() {
   const pathname = usePathname();
   const { t } = useI18n();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setIsLoggedIn(!!user);
+    });
+  }, []);
 
   const items = [
     { href: "/", icon: "home", label: "Home" },
     { href: "/explore", icon: "explore", label: t("nav.explore") },
     { href: "/dashboard", icon: "dashboard", label: t("nav.dashboard") },
-    { href: "/login", icon: "person", label: t("nav.login") },
+    ...(isLoggedIn
+      ? [{ href: "/profile", icon: "person", label: t("nav.profile") }]
+      : [{ href: "/login", icon: "person", label: t("nav.login") }]),
   ];
 
   return (
