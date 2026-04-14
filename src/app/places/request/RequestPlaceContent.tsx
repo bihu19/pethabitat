@@ -139,7 +139,7 @@ export default function RequestPlaceContent() {
       let cover_image: string | null = null;
       if (imageFile) {
         try {
-          cover_image = await uploadImage("place-images", user.id, imageFile);
+          cover_image = await uploadImage("pet-photos", user.id, imageFile, "places");
         } catch (uploadErr: any) {
           setError(uploadErr.message || "Failed to upload image.");
           setLoading(false);

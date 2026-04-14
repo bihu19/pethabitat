@@ -1,13 +1,16 @@
 import { createClient } from "@/lib/supabase/client";
 
 export async function uploadImage(
-  bucket: "avatars" | "pet-photos" | "place-images",
+  bucket: "avatars" | "pet-photos",
   userId: string,
-  file: File
+  file: File,
+  pathPrefix?: string
 ): Promise<string> {
   const supabase = createClient();
   const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
-  const fileName = `${userId}/${Date.now()}.${ext}`;
+  const fileName = pathPrefix
+    ? `${pathPrefix}/${userId}/${Date.now()}.${ext}`
+    : `${userId}/${Date.now()}.${ext}`;
 
   const { error } = await supabase.storage
     .from(bucket)
