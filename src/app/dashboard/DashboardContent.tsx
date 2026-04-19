@@ -29,19 +29,20 @@ export default function DashboardContent() {
       setUser(user);
       setAvatarUrl(user.user_metadata?.avatar_url || null);
 
-      const { data: petsData } = await supabase
-        .from("pets")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("created_at");
+      const [{ data: petsData }, { data: savedData }] = await Promise.all([
+        supabase
+          .from("pets")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("created_at"),
+        supabase
+          .from("saved_places")
+          .select("place_id, places(*)")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false })
+          .limit(6),
+      ]);
       setPets(petsData || []);
-
-      const { data: savedData } = await supabase
-        .from("saved_places")
-        .select("place_id, places(*)")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false })
-        .limit(6);
       if (savedData) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const places = savedData
@@ -194,19 +195,11 @@ export default function DashboardContent() {
               <h3 className="font-headline font-bold mb-1">{t("nav.explore")}</h3>
               <p className="text-sm text-on-surface-variant">Find pet-friendly spots near you</p>
             </Link>
-            {pets.length === 0 ? (
-              <Link href="/pets/new" className="bg-secondary-container/10 p-6 rounded-xl hover:bg-secondary-container/20 transition-colors">
-                <span className="material-symbols-outlined text-secondary text-3xl mb-3">add_circle</span>
-                <h3 className="font-headline font-bold mb-1">{t("dashboard.addPet")}</h3>
-                <p className="text-sm text-on-surface-variant">Create a profile for your pet</p>
-              </Link>
-            ) : (
-              <Link href="/pets/new" className="bg-secondary-container/10 p-6 rounded-xl hover:bg-secondary-container/20 transition-colors">
-                <span className="material-symbols-outlined text-secondary text-3xl mb-3">add_circle</span>
-                <h3 className="font-headline font-bold mb-1">{t("dashboard.addPet")}</h3>
-                <p className="text-sm text-on-surface-variant">Create a profile for your pet</p>
-              </Link>
-            )}
+            <Link href="/pets/new" className="bg-secondary-container/10 p-6 rounded-xl hover:bg-secondary-container/20 transition-colors">
+              <span className="material-symbols-outlined text-secondary text-3xl mb-3">add_circle</span>
+              <h3 className="font-headline font-bold mb-1">{t("dashboard.addPet")}</h3>
+              <p className="text-sm text-on-surface-variant">Create a profile for your pet</p>
+            </Link>
           </div>
         </section>
       </div>

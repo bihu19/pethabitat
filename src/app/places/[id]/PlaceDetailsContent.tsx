@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useI18n } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/client";
 import type { Place, Review } from "@/lib/types";
@@ -71,9 +71,12 @@ export default function PlaceDetailsContent({ place, reviews: initialReviews }: 
     }
   };
 
-  const avgRating = reviews.length > 0
-    ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
-    : "N/A";
+  const avgRating = useMemo(
+    () => reviews.length > 0
+      ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
+      : "N/A",
+    [reviews]
+  );
 
   const handleSubmitReview = async (e: React.FormEvent) => {
     e.preventDefault();

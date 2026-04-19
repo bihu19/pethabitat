@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { useI18n } from "@/lib/i18n";
 import Link from "next/link";
@@ -89,12 +89,12 @@ export default function ExploreContent({ initialPlaces }: { initialPlaces: Place
     return filtered;
   }, [places, activeFilter, searchQuery, selectedProvince, petFriendlyOnly]);
 
-  const clearFilters = () => {
+  const clearFilters = useCallback(() => {
     setActiveFilter("all");
     setSelectedProvince("all");
     setPetFriendlyOnly(false);
     setSearchQuery("");
-  };
+  }, []);
 
   const hasActiveFilters = activeFilter !== "all" || selectedProvince !== "all" || petFriendlyOnly || searchQuery;
 

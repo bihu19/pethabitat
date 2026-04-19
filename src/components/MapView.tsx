@@ -20,6 +20,13 @@ const typeMarkerColors: Record<string, string> = {
   "Pet School": "#ff9800",
 };
 
+function makeMarkerHtml(color: string, iconName: string, isSelected: boolean): string {
+  const size = isSelected ? 40 : 32;
+  const fontSize = isSelected ? 20 : 16;
+  const shadow = isSelected ? "0.5" : "0.3";
+  return `<div style="background:${color};width:${size}px;height:${size}px;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,${shadow});display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s;"><span class="material-symbols-outlined" style="color:white;font-size:${fontSize}px;font-variation-settings:'FILL' 1;">${iconName}</span></div>`;
+}
+
 function getIconName(type: string) {
   if (type === "Hotel" || type === "Pet Hotel") return "hotel";
   if (type === "Cafe" || type === "Restaurant") return "restaurant";
@@ -101,13 +108,12 @@ export default function MapView({
       const iconName = getIconName(firstType);
       const isSelected = selectedPlace === place.id;
 
+      const size = isSelected ? 40 : 32;
       const icon = L!.divIcon({
         className: "custom-marker",
-        html: `<div style="background:${color};width:${isSelected ? 40 : 32}px;height:${isSelected ? 40 : 32}px;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s;">
-          <span class="material-symbols-outlined" style="color:white;font-size:${isSelected ? 20 : 16}px;font-variation-settings:'FILL' 1;">${iconName}</span>
-        </div>`,
-        iconSize: [isSelected ? 40 : 32, isSelected ? 40 : 32],
-        iconAnchor: [isSelected ? 20 : 16, isSelected ? 20 : 16],
+        html: makeMarkerHtml(color, iconName, isSelected),
+        iconSize: [size, size],
+        iconAnchor: [size / 2, size / 2],
       });
 
       const marker = L!.marker([place.latitude, place.longitude], { icon }).addTo(mapRef.current);
@@ -139,13 +145,12 @@ export default function MapView({
       const iconName = getIconName(firstType);
       const isSelected = selectedPlace === place.id;
 
+      const size = isSelected ? 40 : 32;
       const icon = L!.divIcon({
         className: "custom-marker",
-        html: `<div style="background:${color};width:${isSelected ? 40 : 32}px;height:${isSelected ? 40 : 32}px;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,${isSelected ? '0.5' : '0.3'});display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s;">
-          <span class="material-symbols-outlined" style="color:white;font-size:${isSelected ? 20 : 16}px;font-variation-settings:'FILL' 1;">${iconName}</span>
-        </div>`,
-        iconSize: [isSelected ? 40 : 32, isSelected ? 40 : 32],
-        iconAnchor: [isSelected ? 20 : 16, isSelected ? 20 : 16],
+        html: makeMarkerHtml(color, iconName, isSelected),
+        iconSize: [size, size],
+        iconAnchor: [size / 2, size / 2],
       });
 
       marker.setIcon(icon);
