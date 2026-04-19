@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { memo, useState, useEffect } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import type { Place } from "@/lib/types";
@@ -29,7 +29,7 @@ function parseTypes(placeType: string): string[] {
   return placeType.split(",").map((t) => t.trim()).filter(Boolean);
 }
 
-export default function PlaceCard({ place, savedPlaceIds }: { place: Place; savedPlaceIds?: Set<string> }) {
+const PlaceCard = memo(function PlaceCard({ place, savedPlaceIds }: { place: Place; savedPlaceIds?: Set<string> }) {
   const types = parseTypes(place.place_type);
   const firstType = types[0] || "Pet Supplier";
   const colors = typeColors[firstType] || typeColors["Pet Supplier"];
@@ -115,4 +115,6 @@ export default function PlaceCard({ place, savedPlaceIds }: { place: Place; save
       </div>
     </Link>
   );
-}
+});
+
+export default PlaceCard;
