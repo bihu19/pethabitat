@@ -1,7 +1,16 @@
 "use client";
 
+import { useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n";
+import { provinces as allProvinces } from "@/lib/provinces";
+
+type LandingPlace = {
+  place_type: string;
+  province: string;
+  cover_image: string | null;
+};
 
 const categories = [
   { icon: "hotel", label: "Pet-Friendly Hotels", labelTh: "โรงแรมพาสัตว์เลี้ยงเข้าได้", color: "bg-tertiary-container", textColor: "text-on-tertiary-container", tag: "Hotel" },
@@ -11,8 +20,52 @@ const categories = [
   { icon: "storefront", label: "Pet Shops", labelTh: "ร้านสัตว์เลี้ยง", color: "bg-surface-container-highest", textColor: "text-on-surface-variant", tag: "Pet Supplier" },
 ];
 
-export default function LandingContent() {
+function matchesCategory(placeType: string, tag: string): boolean {
+  const types = placeType.split(",").map((t) => t.trim());
+  if (tag === "Cafe") return types.some((t) => t === "Cafe" || t === "Restaurant");
+  if (tag === "Hospital") return types.some((t) => t === "Hospital" || t === "Clinic");
+  return types.includes(tag);
+}
+
+export default function LandingContent({ places }: { places: LandingPlace[] }) {
   const { t, locale } = useI18n();
+  const router = useRouter();
+  const [selectedProvince, setSelectedProvince] = useState("");
+
+  const topProvinces = useMemo(() => {
+    const counts: Record<string, number> = {};
+    places.forEach((p) => {
+      if (p.province) counts[p.province] = (counts[p.province] || 0) + 1;
+    });
+    return Object.entries(counts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([province]) => {
+        const prov = allProvinces.find((p) => p.th === province);
+        return { province, en: prov?.en || province };
+      });
+  }, [places]);
+
+  const categoryImages = useMemo(() => {
+    const map: Record<string, string> = {};
+    categories.forEach((cat) => {
+      const matching = places.filter(
+        (p) => matchesCategory(p.place_type, cat.tag) && p.cover_image
+      );
+      if (matching.length > 0) {
+        map[cat.tag] = matching[Math.floor(Math.random() * matching.length)].cover_image!;
+      }
+    });
+    return map;
+  }, [places]);
+
+  const handleSearch = () => {
+    if (selectedProvince) {
+      router.push(`/explore?province=${encodeURIComponent(selectedProvince)}`);
+    } else {
+      router.push("/explore");
+    }
+  };
 
   return (
     <>
@@ -30,20 +83,53 @@ export default function LandingContent() {
             <p className="text-on-surface-variant text-lg md:text-xl max-w-md mb-8 md:mb-10 leading-relaxed">
               {t("home.subtitle")}
             </p>
+
+            {/* Search bar */}
             <div className="flex flex-col sm:flex-row gap-4 bg-surface-container-lowest p-2 rounded-lg sm:rounded-full shadow-lg max-w-2xl ring-1 ring-outline-variant/10">
-              <div className="flex-1 flex items-center px-4 md:px-6 py-3 sm:py-0 border-b sm:border-b-0 sm:border-r border-outline-variant/20">
-                <span className="material-symbols-outlined text-primary mr-3">location_on</span>
-                <input className="w-full bg-transparent border-none focus:ring-0 text-on-surface font-body" placeholder={t("home.searchCity")} type="text" />
+              <div className="flex-1 flex items-center px-4 md:px-6 py-3 sm:py-0 border-b sm:border-b-0 sm:border-r border-outline-variant/20 relative">
+                <span className="material-symbols-outlined text-primary mr-3 shrink-0">location_on</span>
+                <select
+                  className="w-full bg-transparent border-none focus:ring-0 text-on-surface font-body appearance-none cursor-pointer pr-6"
+                  value={selectedProvince}
+                  onChange={(e) => setSelectedProvince(e.target.value)}
+                >
+                  <option value="">{t("home.searchCity")}</option>
+                  {allProvinces.map((p) => (
+                    <option key={p.th} value={p.th}>
+                      {locale === "en" ? `${p.en} (${p.th})` : p.th}
+                    </option>
+                  ))}
+                </select>
+                <span className="material-symbols-outlined text-on-surface-variant text-sm pointer-events-none absolute right-2">expand_more</span>
               </div>
-              <Link
-                href="/explore"
-                className="bg-primary text-on-primary px-8 md:px-10 py-3 md:py-4 rounded-full font-bold hover:shadow-xl hover:shadow-primary/20 transition-all flex items-center justify-center gap-2 text-center"
+              <button
+                onClick={handleSearch}
+                className="bg-primary text-on-primary px-8 md:px-10 py-3 md:py-4 rounded-full font-bold hover:shadow-xl hover:shadow-primary/20 transition-all flex items-center justify-center gap-2"
               >
                 <span>{t("home.searchButton")}</span>
                 <span className="material-symbols-outlined text-lg">arrow_forward</span>
-              </Link>
+              </button>
             </div>
+
+            {/* Top provinces quick-select */}
+            {topProvinces.length > 0 && (
+              <div className="flex flex-wrap items-center gap-2 mt-4">
+                <span className="text-sm text-on-surface-variant font-medium">
+                  {locale === "en" ? "Popular:" : "ยอดนิยม:"}
+                </span>
+                {topProvinces.map(({ province, en }) => (
+                  <Link
+                    key={province}
+                    href={`/explore?province=${encodeURIComponent(province)}`}
+                    className="px-4 py-1.5 rounded-full bg-surface-container text-sm font-medium hover:bg-primary-container hover:text-on-primary-container transition-colors ring-1 ring-outline-variant/20"
+                  >
+                    {locale === "en" ? en : province}
+                  </Link>
+                ))}
+              </div>
+            )}
           </div>
+
           <div className="flex-1 relative hidden lg:block">
             <div className="absolute -top-10 -right-10 w-32 h-32 bg-secondary-container/30 rounded-full blur-3xl"></div>
             <div className="relative z-10 w-full aspect-square rounded-xl overflow-hidden bg-primary-container/20 flex items-center justify-center">
@@ -68,10 +154,36 @@ export default function LandingContent() {
           {categories.map((cat) => (
             <Link key={cat.tag} href={`/explore?type=${encodeURIComponent(cat.tag)}`}>
               <div className="group cursor-pointer">
-                <div className={`relative h-40 md:h-52 rounded-lg overflow-hidden mb-3 ${cat.color} flex flex-col items-center justify-center gap-4 group-hover:shadow-xl transition-all`}>
-                  <span className={`material-symbols-outlined text-5xl md:text-6xl ${cat.textColor}`} style={{ fontVariationSettings: "'FILL' 1" }}>{cat.icon}</span>
+                <div className="relative h-40 md:h-52 rounded-lg overflow-hidden mb-3 group-hover:shadow-xl transition-all">
+                  {categoryImages[cat.tag] ? (
+                    <>
+                      <img
+                        src={categoryImages[cat.tag]}
+                        alt={locale === "en" ? cat.label : cat.labelTh}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/5 to-transparent" />
+                      <span
+                        className="absolute bottom-3 left-3 material-symbols-outlined text-2xl text-white drop-shadow"
+                        style={{ fontVariationSettings: "'FILL' 1" }}
+                      >
+                        {cat.icon}
+                      </span>
+                    </>
+                  ) : (
+                    <div className={`w-full h-full ${cat.color} flex flex-col items-center justify-center gap-4`}>
+                      <span
+                        className={`material-symbols-outlined text-5xl md:text-6xl ${cat.textColor}`}
+                        style={{ fontVariationSettings: "'FILL' 1" }}
+                      >
+                        {cat.icon}
+                      </span>
+                    </div>
+                  )}
                 </div>
-                <h3 className="font-headline font-bold text-sm md:text-base text-center">{locale === "en" ? cat.label : cat.labelTh}</h3>
+                <h3 className="font-headline font-bold text-sm md:text-base text-center">
+                  {locale === "en" ? cat.label : cat.labelTh}
+                </h3>
               </div>
             </Link>
           ))}
