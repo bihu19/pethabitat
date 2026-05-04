@@ -1,10 +1,36 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n";
 import { provinces as allProvinces } from "@/lib/provinces";
+
+// Unsplash (free license). To swap a photo: open the Unsplash page, right-click
+// the main image → Copy image address, and replace the URL below.
+const heroImages = [
+  {
+    // Smiling golden retriever — unsplash.com/photos/CLhFS67ni1c
+    url: "https://images.unsplash.com/photo-1587300003388-59208cc962cb?auto=format&fit=crop&w=900&q=80",
+    alt: "Happy smiling golden retriever",
+  },
+  {
+    // Happy rottweiler tongue out — unsplash.com/photos/GXOEkFVZ7R8
+    url: "https://images.unsplash.com/photo-1537151608828-ea2b11777ee8?auto=format&fit=crop&w=900&q=80",
+    alt: "Happy rottweiler with tongue out",
+  },
+  {
+    // Happy corgi on green grass — unsplash.com/photos/4agER9GF1cA
+    url: "https://images.unsplash.com/photo-1574158622682-e40e69881006?auto=format&fit=crop&w=900&q=80",
+    alt: "Happy corgi lying on green grass",
+  },
+  {
+    // Fluffy smiling pomeranian — unsplash.com/photos/oIsAYyGBges
+    url: "https://images.unsplash.com/photo-1552053831-71594a27632d?auto=format&fit=crop&w=900&q=80",
+    alt: "Fluffy smiling pomeranian puppy",
+  },
+];
 
 type LandingPlace = {
   place_type: string;
@@ -31,6 +57,12 @@ export default function LandingContent({ places }: { places: LandingPlace[] }) {
   const { t, locale } = useI18n();
   const router = useRouter();
   const [selectedProvince, setSelectedProvince] = useState("");
+  const [heroImgError, setHeroImgError] = useState(false);
+
+  const heroImage = useMemo(
+    () => heroImages[Math.floor(Math.random() * heroImages.length)],
+    []
+  );
 
   const topProvinces = useMemo(() => {
     const counts: Record<string, number> = {};
@@ -132,8 +164,22 @@ export default function LandingContent({ places }: { places: LandingPlace[] }) {
 
           <div className="flex-1 relative hidden lg:block">
             <div className="absolute -top-10 -right-10 w-32 h-32 bg-secondary-container/30 rounded-full blur-3xl"></div>
-            <div className="relative z-10 w-full aspect-square rounded-xl overflow-hidden bg-primary-container/20 flex items-center justify-center">
-              <span className="material-symbols-outlined text-primary/20" style={{ fontSize: "200px", fontVariationSettings: "'FILL' 1" }}>pets</span>
+            <div className="relative z-10 w-full aspect-square rounded-xl overflow-hidden bg-primary-container/20">
+              {!heroImgError ? (
+                <Image
+                  src={heroImage.url}
+                  alt={heroImage.alt}
+                  fill
+                  className="object-cover object-center"
+                  sizes="(max-width: 1280px) 50vw, 560px"
+                  priority
+                  onError={() => setHeroImgError(true)}
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center">
+                  <span className="material-symbols-outlined text-primary/20" style={{ fontSize: "200px", fontVariationSettings: "'FILL' 1" }}>pets</span>
+                </div>
+              )}
             </div>
           </div>
         </div>
