@@ -34,10 +34,11 @@ function placeHasType(placeType: string, filterKey: string): boolean {
 export default function ExploreContent({ initialPlaces }: { initialPlaces: Place[] }) {
   const searchParams = useSearchParams();
   const initialType = searchParams.get("type") || "all";
+  const initialProvince = searchParams.get("province") || "all";
   const [activeFilter, setActiveFilter] = useState(initialType);
   const [selectedPlace, setSelectedPlace] = useState<string>();
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedProvince, setSelectedProvince] = useState("all");
+  const [selectedProvince, setSelectedProvince] = useState(initialProvince);
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [petFriendlyOnly, setPetFriendlyOnly] = useState(false);
   const [savedPlaceIds, setSavedPlaceIds] = useState<Set<string>>(new Set());
