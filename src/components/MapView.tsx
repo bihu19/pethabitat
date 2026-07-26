@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import type { Place } from "@/lib/types";
+import { safeExternalUrl } from "@/lib/safeUrl";
 
 let L: typeof import("leaflet") | null = null;
 
@@ -163,6 +164,8 @@ export default function MapView({
   };
 
   const types = clickedPlace ? clickedPlace.place_type.split(",").map((t) => t.trim()) : [];
+  // Stored URL — only render it as an href if it is really http(s).
+  const clickedDirectionsUrl = safeExternalUrl(clickedPlace?.google_maps_url);
 
   return (
     <div className="relative w-full h-full">
@@ -232,9 +235,9 @@ export default function MapView({
               >
                 View Details
               </Link>
-              {clickedPlace.google_maps_url && (
+              {clickedDirectionsUrl && (
                 <a
-                  href={clickedPlace.google_maps_url}
+                  href={clickedDirectionsUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="py-2 px-4 border-2 border-primary text-primary rounded-full font-bold text-sm flex items-center gap-1 hover:bg-primary-container/20 transition-colors"

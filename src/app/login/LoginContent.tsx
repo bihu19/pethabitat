@@ -24,8 +24,12 @@ export default function LoginContent() {
       if (error) throw error;
       router.push("/dashboard");
       router.refresh();
-    } catch (err: any) {
-      setError(err.message || "Login failed");
+    } catch (err) {
+      // Supabase distinguishes "email not confirmed" from bad credentials,
+      // which lets an attacker enumerate registered accounts. Log the detail,
+      // show one message.
+      console.error("Sign-in failed", err);
+      setError("Incorrect email or password.");
     } finally {
       setLoading(false);
     }
@@ -38,8 +42,9 @@ export default function LoginContent() {
         provider: "google",
         options: { redirectTo: `${window.location.origin}/dashboard` },
       });
-    } catch (err: any) {
-      setError(err.message || "Google login failed");
+    } catch (err) {
+      console.error("Google sign-in failed", err);
+      setError("Google login failed. Please try again.");
     }
   };
 

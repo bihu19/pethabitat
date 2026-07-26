@@ -3,16 +3,28 @@ import Providers from "@/components/Providers";
 import Navbar from "@/components/Navbar";
 import BottomNav from "@/components/BottomNav";
 import ExploreContent from "./ExploreContent";
-import { createClient } from "@/lib/supabase/server";
+import type { Place } from "@/lib/types";
+import {
+  createPublicClient,
+  PLACE_LIST_COLUMNS,
+  PLACE_LIST_MAX,
+} from "@/lib/supabase/public";
 
-export const dynamic = "force-dynamic";
+// Places are public, admin-curated data that changes rarely. Rendering this
+// statically and revalidating every 5 minutes means one database query per
+// window instead of one per visitor.
+export const revalidate = 300;
 
 export default async function ExplorePage() {
-  let places = [];
+  let places: Place[] = [];
   try {
-    const supabase = await createClient();
-    const { data } = await supabase.from("places").select("*").order("name");
-    places = data || [];
+    const supabase = createPublicClient();
+    const { data } = await supabase
+      .from("places")
+      .select(PLACE_LIST_COLUMNS)
+      .order("name")
+      .limit(PLACE_LIST_MAX);
+    places = (data as Place[] | null) || [];
   } catch {
     // Supabase not configured yet, use empty array
     places = [];

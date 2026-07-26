@@ -50,8 +50,9 @@ export default function ProfileContent() {
       });
       if (error) throw error;
       setMessage(t("profile.saved"));
-    } catch (err: any) {
-      setMessage(err.message || "Failed to save");
+    } catch (err) {
+      console.error("Profile save failed", err);
+      setMessage("Failed to save. Please try again.");
     }
     setSaving(false);
   };

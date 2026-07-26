@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/client";
-import { uploadImage } from "@/lib/uploadImage";
+import { uploadImage, validateImageFile, UploadValidationError } from "@/lib/uploadImage";
 import type { Pet } from "@/lib/types";
 
 export default function PetDetailContent({ petId }: { petId: string }) {
@@ -43,8 +43,10 @@ export default function PetDetailContent({ petId }: { petId: string }) {
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !pet) return;
-    if (file.size > 5 * 1024 * 1024) {
-      setPhotoError(t("pet.photoTooLarge"));
+    try {
+      validateImageFile(file);
+    } catch (err) {
+      setPhotoError(err instanceof UploadValidationError ? err.message : t("pet.photoTooLarge"));
       return;
     }
     setUploadingPhoto(true);
@@ -57,8 +59,8 @@ export default function PetDetailContent({ petId }: { petId: string }) {
       const url = await uploadImage("pet-photos", user.id, file);
       await supabase.from("pets").update({ photo_url: url }).eq("id", petId);
       setPet({ ...pet, photo_url: url });
-    } catch (err: any) {
-      setPhotoError(err.message || "Failed to upload photo");
+    } catch (err) {
+      setPhotoError(err instanceof UploadValidationError ? err.message : "Failed to upload photo. Please try again.");
     }
     setUploadingPhoto(false);
   };

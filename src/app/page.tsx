@@ -3,17 +3,19 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import BottomNav from "@/components/BottomNav";
 import LandingContent from "./LandingContent";
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient, PLACE_LIST_MAX } from "@/lib/supabase/public";
 
-export const dynamic = "force-dynamic";
+// Public, slow-moving data — cache it rather than querying per visitor.
+export const revalidate = 300;
 
 export default async function HomePage() {
   let places: { place_type: string; province: string; cover_image: string | null }[] = [];
   try {
-    const supabase = await createClient();
+    const supabase = createPublicClient();
     const { data } = await supabase
       .from("places")
-      .select("place_type, province, cover_image");
+      .select("place_type, province, cover_image")
+      .limit(PLACE_LIST_MAX);
     places = data || [];
   } catch {
     places = [];

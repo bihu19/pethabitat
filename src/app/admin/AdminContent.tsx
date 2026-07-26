@@ -5,6 +5,8 @@ import { useI18n } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/client";
 import { provinces } from "@/lib/provinces";
 import { extractCoordsFromUrl } from "@/lib/extractCoords";
+import { safeExternalUrl } from "@/lib/safeUrl";
+import { revalidatePlaceCaches } from "./actions";
 import type { Place, PlaceType, PlaceRequest } from "@/lib/types";
 
 const allPlaceTypes: PlaceType[] = [
@@ -178,17 +180,32 @@ export default function AdminContent({ initialPlaces, initialRequests = [] }: { 
         pet_amenities = items.length > 0 ? items.join(",") : null;
       }
 
+      // These end up as href/src on the public place page — reject anything
+      // that is not a genuine http(s) URL rather than storing it.
+      const googleMapsUrl = safeExternalUrl(form.google_maps_url);
+      const websiteUrl = safeExternalUrl(form.website_url);
+      const coverImage = safeExternalUrl(form.cover_image);
+      if (
+        (form.google_maps_url && !googleMapsUrl) ||
+        (form.website_url && !websiteUrl) ||
+        (form.cover_image && !coverImage)
+      ) {
+        setMessage(t("request.invalidUrl"));
+        setSaving(false);
+        return;
+      }
+
       const placeData = {
         name: form.name,
         place_type: form.place_types.join(","),
         province: form.province,
         description: form.description || null,
-        google_maps_url: form.google_maps_url || null,
-        website_url: form.website_url || null,
+        google_maps_url: googleMapsUrl,
+        website_url: websiteUrl,
         pet_fee: form.pet_fee || null,
         pet_condition: form.pet_condition || null,
         pet_friendly: form.pet_friendly || null,
-        cover_image: form.cover_image || null,
+        cover_image: coverImage,
         pet_amenities,
         latitude: parseFloat(form.latitude) || 13.7563,
         longitude: parseFloat(form.longitude) || 100.5018,
@@ -203,6 +220,7 @@ export default function AdminContent({ initialPlaces, initialRequests = [] }: { 
           .single();
         if (error) throw error;
         setPlaces((prev) => prev.map((p) => (p.id === editingId ? data : p)));
+        await revalidatePlaceCaches();
         setMessage(t("admin.saved"));
       } else {
         const { data, error } = await supabase
@@ -212,12 +230,14 @@ export default function AdminContent({ initialPlaces, initialRequests = [] }: { 
           .single();
         if (error) throw error;
         setPlaces((prev) => [data, ...prev]);
+        await revalidatePlaceCaches();
         setMessage(t("admin.saved"));
       }
 
       setShowForm(false);
-    } catch (err: any) {
-      setMessage(err.message || "Error saving place");
+    } catch (err) {
+      console.error("Error saving place", err);
+      setMessage("Error saving place. Please try again.");
     } finally {
       setSaving(false);
     }
@@ -230,9 +250,11 @@ export default function AdminContent({ initialPlaces, initialRequests = [] }: { 
       const { error } = await supabase.from("places").delete().eq("id", place.id);
       if (error) throw error;
       setPlaces((prev) => prev.filter((p) => p.id !== place.id));
+      await revalidatePlaceCaches();
       setMessage(t("admin.deleted"));
-    } catch (err: any) {
-      setMessage(err.message || "Error deleting place");
+    } catch (err) {
+      console.error("Error deleting place", err);
+      setMessage("Error deleting place. Please try again.");
     }
   };
 
@@ -265,9 +287,11 @@ export default function AdminContent({ initialPlaces, initialRequests = [] }: { 
       if (updateErr) throw updateErr;
 
       setRequests((prev) => prev.map((r) => r.id === req.id ? { ...r, status: "approved" as const } : r));
+      await revalidatePlaceCaches();
       setMessage(t("request.approvedSuccess"));
-    } catch (err: any) {
-      setMessage(err.message || "Error approving request");
+    } catch (err) {
+      console.error("Error approving request", err);
+      setMessage("Error approving request. Please try again.");
     }
   };
 
@@ -282,8 +306,9 @@ export default function AdminContent({ initialPlaces, initialRequests = [] }: { 
 
       setRequests((prev) => prev.map((r) => r.id === req.id ? { ...r, status: "rejected" as const, admin_note: note || null } : r));
       setMessage(t("request.rejectedSuccess"));
-    } catch (err: any) {
-      setMessage(err.message || "Error rejecting request");
+    } catch (err) {
+      console.error("Error rejecting request", err);
+      setMessage("Error rejecting request. Please try again.");
     }
   };
 

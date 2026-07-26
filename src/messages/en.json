@@ -195,7 +195,8 @@
     "approvedSuccess": "Request approved and place published!",
     "rejectedSuccess": "Request rejected.",
     "submittedOn": "Submitted on",
-    "requestPlace": "Suggest a Place"
+    "requestPlace": "Suggest a Place",
+    "invalidUrl": "Please enter a valid http:// or https:// link."
   },
   "admin": {
     "managePlaces": "Manage Places",
