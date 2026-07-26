@@ -29,8 +29,10 @@ export default function RegisterContent() {
       const { error } = await supabase.auth.signUp({ email, password });
       if (error) throw error;
       setSuccess(true);
-    } catch (err: any) {
-      setError(err.message || "Registration failed");
+    } catch (err) {
+      // "User already registered" would confirm an address is in use.
+      console.error("Registration failed", err);
+      setError("Registration failed. Please check your details and try again.");
     } finally {
       setLoading(false);
     }
@@ -71,8 +73,9 @@ export default function RegisterContent() {
                 provider: "google",
                 options: { redirectTo: `${window.location.origin}/dashboard` },
               });
-            } catch (err: any) {
-              setError(err.message || "Google sign up failed");
+            } catch (err) {
+              console.error("Google sign-up failed", err);
+              setError("Google sign up failed. Please try again.");
             }
           }}
           className="w-full py-3 bg-white border-2 border-outline-variant/20 rounded-full font-bold text-on-surface flex items-center justify-center gap-3 hover:bg-surface-container-lowest transition-colors"

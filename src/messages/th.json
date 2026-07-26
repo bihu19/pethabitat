@@ -195,7 +195,8 @@
     "approvedSuccess": "อนุมัติคำขอและเผยแพร่สถานที่แล้ว!",
     "rejectedSuccess": "ปฏิเสธคำขอแล้ว",
     "submittedOn": "ส่งเมื่อ",
-    "requestPlace": "แนะนำสถานที่"
+    "requestPlace": "แนะนำสถานที่",
+    "invalidUrl": "กรุณากรอกลิงก์ http:// หรือ https:// ที่ถูกต้อง"
   },
   "admin": {
     "managePlaces": "จัดการสถานที่",

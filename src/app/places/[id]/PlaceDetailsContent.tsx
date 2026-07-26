@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useI18n } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/client";
 import type { Place, Review } from "@/lib/types";
+import { safeExternalUrl } from "@/lib/safeUrl";
 
 const typeIcons: Record<string, string> = {
   Hotel: "hotel", "Pet Hotel": "pets", Cafe: "local_cafe", Restaurant: "restaurant",
@@ -24,6 +25,18 @@ export default function PlaceDetailsContent({ place, reviews: initialReviews }: 
   const [submitting, setSubmitting] = useState(false);
   const [saved, setSaved] = useState(false);
   const [savingPlace, setSavingPlace] = useState(false);
+
+  // These are operator/user-submitted strings from the database. Resolve them
+  // to null unless they are genuine http(s) URLs, so a stored `javascript:`
+  // URL can never reach an href.
+  const directionsUrl = useMemo(
+    () => safeExternalUrl(place.google_maps_url),
+    [place.google_maps_url]
+  );
+  const websiteUrl = useMemo(
+    () => safeExternalUrl(place.website_url),
+    [place.website_url]
+  );
 
   useEffect(() => {
     async function checkSaved() {
@@ -317,9 +330,9 @@ export default function PlaceDetailsContent({ place, reviews: initialReviews }: 
               </div>
 
               <div className="space-y-3">
-                {place.google_maps_url && (
+                {directionsUrl && (
                   <a
-                    href={place.google_maps_url}
+                    href={directionsUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="w-full py-3 md:py-4 bg-primary text-on-primary rounded-full font-bold text-base md:text-lg shadow-md flex items-center justify-center gap-2"
@@ -328,9 +341,9 @@ export default function PlaceDetailsContent({ place, reviews: initialReviews }: 
                     {t("place.getDirections")}
                   </a>
                 )}
-                {place.website_url && (
+                {websiteUrl && (
                   <a
-                    href={place.website_url}
+                    href={websiteUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="w-full py-3 md:py-4 border-2 border-primary text-primary rounded-full font-bold transition-colors hover:bg-primary-fixed flex items-center justify-center gap-2"

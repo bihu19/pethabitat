@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/client";
-import { uploadImage } from "@/lib/uploadImage";
+import { uploadImage, validateImageFile, UploadValidationError } from "@/lib/uploadImage";
 
 const temperamentOptions = ["Playful", "Shy", "Energetic", "Cuddly", "Vocal", "Calm", "Protective"];
 
@@ -49,10 +49,13 @@ export default function PetFormContent() {
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) {
-      setError(t("pet.photoTooLarge"));
+    try {
+      validateImageFile(file);
+    } catch (err) {
+      setError(err instanceof UploadValidationError ? err.message : t("pet.photoTooLarge"));
       return;
     }
+    setError("");
     setPhotoFile(file);
     setPhotoPreview(URL.createObjectURL(file));
   };
@@ -81,8 +84,8 @@ export default function PetFormContent() {
       if (photoFile) {
         try {
           photo_url = await uploadImage("pet-photos", user.id, photoFile);
-        } catch (uploadErr: any) {
-          setError(uploadErr.message || "Failed to upload photo. Make sure the pet-photos storage bucket exists in Supabase.");
+        } catch (uploadErr) {
+          setError(uploadErr instanceof UploadValidationError ? uploadErr.message : "Failed to upload photo. Please try again.");
           setLoading(false);
           return;
         }
@@ -106,8 +109,9 @@ export default function PetFormContent() {
       if (error) throw error;
       router.push("/dashboard");
       router.refresh();
-    } catch (err: any) {
-      setError(err.message || "Failed to create pet profile");
+    } catch (err) {
+      console.error("Pet creation failed", err);
+      setError("Failed to create pet profile. Please try again.");
     } finally {
       setLoading(false);
     }

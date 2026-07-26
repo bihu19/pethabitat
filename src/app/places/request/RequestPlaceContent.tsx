@@ -7,7 +7,8 @@ import { useI18n } from "@/lib/i18n";
 import { createClient } from "@/lib/supabase/client";
 import { provinces } from "@/lib/provinces";
 import { extractCoordsFromUrl } from "@/lib/extractCoords";
-import { uploadImage } from "@/lib/uploadImage";
+import { uploadImage, validateImageFile, UploadValidationError } from "@/lib/uploadImage";
+import { safeExternalUrl } from "@/lib/safeUrl";
 import type { PlaceType, PlaceRequest } from "@/lib/types";
 
 const allPlaceTypes: PlaceType[] = [
@@ -115,10 +116,13 @@ export default function RequestPlaceContent() {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) {
-      setError(t("pet.photoTooLarge"));
+    try {
+      validateImageFile(file);
+    } catch (err) {
+      setError(err instanceof UploadValidationError ? err.message : t("pet.photoTooLarge"));
       return;
     }
+    setError("");
     setImageFile(file);
     setImagePreview(URL.createObjectURL(file));
   };
@@ -129,6 +133,20 @@ export default function RequestPlaceContent() {
       setError(t("request.selectType"));
       return;
     }
+
+    // Reject anything that is not a real http(s) URL before it is stored:
+    // these fields are later rendered as links on the public place page.
+    const googleMapsUrl = safeExternalUrl(form.google_maps_url);
+    const websiteUrl = safeExternalUrl(form.website_url);
+    if (form.google_maps_url && !googleMapsUrl) {
+      setError(t("request.invalidUrl"));
+      return;
+    }
+    if (form.website_url && !websiteUrl) {
+      setError(t("request.invalidUrl"));
+      return;
+    }
+
     setLoading(true);
     setError("");
     try {
@@ -140,8 +158,8 @@ export default function RequestPlaceContent() {
       if (imageFile) {
         try {
           cover_image = await uploadImage("pet-photos", user.id, imageFile, "places");
-        } catch (uploadErr: any) {
-          setError(uploadErr.message || "Failed to upload image.");
+        } catch (uploadErr) {
+          setError(uploadErr instanceof UploadValidationError ? uploadErr.message : "Failed to upload image.");
           setLoading(false);
           return;
         }
@@ -153,8 +171,8 @@ export default function RequestPlaceContent() {
         place_type: form.place_types.join(","),
         province: form.province,
         description: form.description || null,
-        google_maps_url: form.google_maps_url || null,
-        website_url: form.website_url || null,
+        google_maps_url: googleMapsUrl,
+        website_url: websiteUrl,
         pet_fee: form.pet_fee || null,
         pet_condition: form.pet_condition || null,
         pet_friendly: form.pet_friendly || null,
@@ -174,8 +192,9 @@ export default function RequestPlaceContent() {
         latitude: "13.7563", longitude: "100.5018",
       });
       setTimeout(() => setSuccess(false), 3000);
-    } catch (err: any) {
-      setError(err.message || "Failed to submit request");
+    } catch (err) {
+      console.error("Place request submission failed", err);
+      setError("Failed to submit request. Please try again.");
     } finally {
       setLoading(false);
     }
